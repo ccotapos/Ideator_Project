@@ -24,3 +24,8 @@ pnpm dev
 - `src/components`: componentes reutilizables.
 - `src/layouts`: estructura general de la aplicacion.
 - `src/pages`: pantallas conectadas al ruteo.
+- `backend/migrations`: migraciones de base de datos.
+
+## Backend
+
+El modelo `Proyecto_Usuario` esta documentado en `backend/README.md`.
