@@ -1,3 +1,9 @@
+## Integrantes
+
+- Diego Galaz
+- Emilio Fernandez
+- Camila Cotapos
+
 # Ideator - Backend Service
 
 Servicio Backend construido con Node.js, Express y PostgreSQL para la gestión de usuarios, proyectos y autenticación JWT.
@@ -58,8 +64,32 @@ La base de datos se ejecuta sobre PostgreSQL en Docker.
 3. Copia y ejecuta el contenido de `migrations/001_create_proyecto_usuario.sql`.
 
 ### Opción B: Desde CLI (Docker container)
-```bash
+```bash`
 docker exec -i <nombre_contenedor_postgres> psql -U postgres -d ideator_db < migrations/001_create_proyecto_usuario.sql
 
-## para correr la suite de pruebas automatizadas con jest y supertest
-## npm test
+para correr la suite de pruebas automatizadas con jest y supertest
+npm test
+
+# Ideator - FrontEnd Service
+
+Frontend inicializado con React, Vite y React Router.
+
+## Requisitos
+
+- Node.js
+- pnpm
+
+## Scripts
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## Estructura
+
+- `src/components`: componentes reutilizables.
+- `src/layouts`: estructura general de la aplicacion.
+- `src/pages`: pantallas conectadas al ruteo.
+- `backend/migrations`: migraciones de base de datos.
+
