@@ -10,8 +10,7 @@ export default function AppLayout() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">Ideator</p>
-          <h1>Proyecto frontend</h1>
+          <h1>Ideator</h1>
         </div>
 
         <nav className="nav" aria-label="Navegación principal">
