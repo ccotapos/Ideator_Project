@@ -6,6 +6,7 @@ Frontend inicializado con React, Vite y React Router.
 
 - Diego Galaz
 - Emilio Fernandez
+- Camila Cotapos
 
 ## Requisitos
 
