@@ -132,3 +132,159 @@ h1 {
     width: 100%;
   }
 }
+
+/* --- Sesión (header) --- */
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-user {
+  color: #344054;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  padding: 10px 14px;
+  border: 1px solid #c8d1df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  border-color: #2364aa;
+  color: #2364aa;
+}
+
+/* --- Autenticación (login / registro) --- */
+
+.auth-section {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 36px rgba(31, 41, 55, 0.08);
+}
+
+.auth-card h2 {
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 1.75rem;
+}
+
+.auth-subtitle {
+  margin-bottom: 24px;
+  color: #475467;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.form-field {
+  margin-bottom: 18px;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #344054;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.form-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c8d1df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-field input:focus {
+  outline: 2px solid #2364aa;
+  outline-offset: 1px;
+  border-color: #2364aa;
+}
+
+.form-field input.invalid {
+  border-color: #d92d20;
+}
+
+.field-error {
+  margin: 6px 0 0;
+  color: #d92d20;
+  font-size: 0.85rem;
+}
+
+.form-error {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px solid #fda29b;
+  border-radius: 8px;
+  background: #fef3f2;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.form-success {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px solid #a6f4c5;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: #027a48;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2364aa;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1c4f86;
+}
+
+.btn-primary:disabled {
+  background: #93a5c2;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  color: #475467;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: #2364aa;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}

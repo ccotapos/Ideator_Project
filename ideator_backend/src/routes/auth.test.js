@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const authRoutes = require('./auth');
 const pool = require('../config/db');
 
@@ -76,5 +77,65 @@ describe('Auth Endpoints (Register & Login)', () => {
 
     expect(res.statusCode).toBe(401);
     expect(res.body.message).toBe('Credenciales inválidas.');
+  });
+});
+
+describe('GET /api/auth/me (ruta protegida por el middleware de autenticación)', () => {
+  const meUser = {
+    name: 'Me User',
+    email: `me_${Date.now()}@example.com`,
+    password: 'Password123!'
+  };
+  let validToken;
+
+  beforeAll(async () => {
+    await request(app).post('/api/auth/register').send(meUser);
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: meUser.email, password: meUser.password });
+    validToken = loginRes.body.token;
+  });
+
+  afterAll(async () => {
+    await pool.query('DELETE FROM users WHERE email = $1', [meUser.email.toLowerCase()]);
+  });
+
+  test('con un token válido responde 200 y los datos del usuario', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${validToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.user.email).toBe(meUser.email.toLowerCase());
+  });
+
+  test('sin token responde 401', async () => {
+    const res = await request(app).get('/api/auth/me');
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('con un token expirado responde 401', async () => {
+    const expiredToken = jwt.sign(
+      { id: 1, email: meUser.email },
+      process.env.JWT_SECRET || 'secret_key',
+      { expiresIn: -10 }
+    );
+
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${expiredToken}`);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.message).toMatch(/expirad/i);
+  });
+
+  test('con un token corrupto responde 401', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', 'Bearer token.corrupto.invalido');
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.message).toMatch(/inválido/i);
   });
 });
