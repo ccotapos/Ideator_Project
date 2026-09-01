@@ -33,6 +33,7 @@ Almacena los proyectos creados en la plataforma.
 | `id` | `SERIAL` | `PRIMARY KEY` | Identificador único del proyecto. |
 | `nombre` | `VARCHAR(150)` | `NOT NULL` | Nombre del proyecto. |
 | `descripcion` | `TEXT` | Opcional | Descripción del proyecto. |
+| `is_private` | `BOOLEAN` | `NOT NULL`, `DEFAULT TRUE` | Indica si el proyecto es privado. |
 | `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | Fecha de creación. |
 
 ### 3. Tabla `proyecto_usuario`
@@ -54,6 +55,32 @@ Tabla intermedia que relaciona usuarios y proyectos asignando un nivel de acceso
 
 ---
 
+## Endpoint de proyectos
+
+`POST /projects` crea un proyecto privado y asigna automaticamente al usuario autenticado como `owner`.
+
+Headers:
+
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "nombre": "Mi proyecto",
+  "descripcion": "Descripcion opcional"
+}
+```
+
+Respuestas principales:
+
+- `201`: proyecto creado y relacion `owner` registrada en `proyecto_usuario`.
+- `400`: falta el nombre del proyecto.
+- `401`: no hay token valido.
+
 ## Ejecución de Migraciones
 
 La base de datos se ejecuta sobre PostgreSQL en Docker.
@@ -62,13 +89,20 @@ La base de datos se ejecuta sobre PostgreSQL en Docker.
 1. Conéctate al servidor de PostgreSQL en la base de datos `ideator_db`.
 2. Abre la **Query Tool** en `ideator_db`.
 3. Copia y ejecuta el contenido de `migrations/001_create_proyecto_usuario.sql`.
+4. Copia y ejecuta el contenido de `migrations/002_add_project_privacy.sql`.
 
 ### Opción B: Desde CLI (Docker container)
-```bash`
+```bash
 docker exec -i <nombre_contenedor_postgres> psql -U postgres -d ideator_db < migrations/001_create_proyecto_usuario.sql
+docker exec -i <nombre_contenedor_postgres> psql -U postgres -d ideator_db < migrations/002_add_project_privacy.sql
+```
 
-para correr la suite de pruebas automatizadas con jest y supertest
+Para correr la suite de pruebas automatizadas con Jest y Supertest:
+
+```bash
+cd ideator_backend
 npm test
+```
 
 # Ideator - FrontEnd Service
 
@@ -91,5 +125,3 @@ pnpm dev
 - `src/components`: componentes reutilizables.
 - `src/layouts`: estructura general de la aplicacion.
 - `src/pages`: pantallas conectadas al ruteo.
-- `backend/migrations`: migraciones de base de datos.
-
