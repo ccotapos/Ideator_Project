@@ -1,23 +1,39 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import AppLayout from './layouts/AppLayout';
-import HomePage from './pages/HomePage';
-import IdeasPage from './pages/IdeasPage';
-import AuthPage from './pages/AuthPage'; // Tu nueva página de login
+import { Navigate, Route, Routes } from 'react-router-dom';
+import AppLayout from './layouts/AppLayout.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
+import HomePage from './pages/HomePage.jsx';
+import IdeasPage from './pages/IdeasPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 
 export default function App() {
   return (
-    <Routes>
-      {/* Ruta pública para el Login/Registro */}
-      <Route path="/" element={<AuthPage />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
 
-      {/* Rutas principales envueltas en tu layout existente */}
-      <Route element={<AppLayout />}>
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/ideas" element={<IdeasPage />} />
-      </Route>
-
-      {/* Si el usuario ingresa una URL que no existe, lo devuelve al login */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route element={<AppLayout />}>
+          <Route
+            index
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="ideas"
+            element={
+              <ProtectedRoute>
+                <IdeasPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }

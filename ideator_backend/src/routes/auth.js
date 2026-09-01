@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const authenticateToken = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -78,6 +79,13 @@ router.post('/login', async (req, res) => {
     console.error('Error en login:', error);
     return res.status(500).json({ message: 'Error interno del servidor.' });
   }
+});
+
+// GET /api/auth/me
+// Ruta protegida de ejemplo: requiere un token válido (ver middleware/auth.js).
+// Útil para que el frontend verifique la sesión activa al cargar la app.
+router.get('/me', authenticateToken, (req, res) => {
+  return res.status(200).json({ user: req.user });
 });
 
 module.exports = router;

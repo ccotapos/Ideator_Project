@@ -1,8 +1,17 @@
 const express = require('express');
+const cors = require('cors');
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+
+// Permite que el frontend (Vite, normalmente en localhost:5173) consuma esta API.
+// FRONTEND_ORIGIN se puede ajustar en .env si el frontend corre en otro puerto/dominio.
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+  })
+);
 
 app.use(express.json());
 
