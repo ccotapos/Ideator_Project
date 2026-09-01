@@ -27,11 +27,30 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     depends_on:
       - postgres_db
+
+  frontend:
+    build: ../frontend
+    container_name: ideator_frontend_container
+    ports:
+      - "5173:5173"
+    environment:
+      # El frontend usa el proxy de Vite (ver vite.config.js), así que
+      # las requests salen como rutas relativas ("/api/...").
+      - VITE_API_URL=
+      # Dentro de la red de docker-compose, el backend se llama "backend",
+      # no "localhost".
+      - VITE_PROXY_TARGET=http://backend:3000
+    volumes:
+      - ../frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
