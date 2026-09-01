@@ -1,3 +1,10 @@
+## Para ejecución
+
+cd ideator_backend
+docker compose up
+
+abrir http://localhost:5173/
+
 ## Integrantes
 
 - Diego Galaz
