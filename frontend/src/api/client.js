@@ -1,10 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+// Al dejarlo como cadena vacía, las peticiones serán relativas (ej: /api/auth/login)
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
-/**
- * Error de API con el mensaje que envía el backend (cuando existe)
- * y el status HTTP original, para poder distinguir casos como
- * 401 (credenciales inválidas) o 409 (email duplicado).
- */
 export class ApiError extends Error {
   constructor(message, status) {
     super(message);
@@ -13,11 +9,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Llama al backend y homogeniza el manejo de errores.
- * Si el backend responde con { message: '...' }, ese mensaje
- * se usa tal cual para mostrarlo en el formulario.
- */
 export async function apiFetch(path, { method = 'GET', body, token } = {}) {
   let response;
 
@@ -41,7 +32,7 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
   try {
     data = await response.json();
   } catch {
-    // Respuesta sin cuerpo JSON (por ejemplo, un 204 o un error de proxy).
+    // Respuesta sin cuerpo JSON
   }
 
   if (!response.ok) {

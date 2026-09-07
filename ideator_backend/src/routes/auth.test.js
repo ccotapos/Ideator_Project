@@ -1,6 +1,7 @@
-// 1. Asignar variables de entorno para entorno local antes de requerir la DB
-process.env.DB_HOST = 'localhost';
-process.env.DB_PORT = '5433';
+// Configuración previa de variables de entorno para tests
+process.env.DB_HOST = process.env.DB_HOST || 'localhost';
+process.env.DB_PORT = process.env.DB_PORT || '5433';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_secret';
 
 require('dotenv').config();
 
@@ -14,11 +15,16 @@ const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
-describe('Auth Endpoints (Register & Login)', () => {
+// Cierre global del pool al finalizar TODAS las pruebas del archivo
+afterAll(async () => {
+  await pool.end();
+});
+
+describe('Auth Endpoints (Register, Login)', () => {
   const testUser = {
     name: 'Test User',
     email: `test_${Date.now()}@example.com`,
-    password: 'Password123!'
+    password: 'Password123!',
   };
 
   afterAll(async () => {
@@ -26,8 +32,6 @@ describe('Auth Endpoints (Register & Login)', () => {
       await pool.query('DELETE FROM users WHERE email = $1', [testUser.email.toLowerCase()]);
     } catch (error) {
       console.error('Error limpiando base de datos:', error);
-    } finally {
-      await pool.end();
     }
   });
 
@@ -46,7 +50,7 @@ describe('Auth Endpoints (Register & Login)', () => {
       .post('/api/auth/login')
       .send({
         email: testUser.email,
-        password: testUser.password
+        password: testUser.password,
       });
 
     expect(res.statusCode).toBe(200);
@@ -60,7 +64,7 @@ describe('Auth Endpoints (Register & Login)', () => {
       .post('/api/auth/login')
       .send({
         email: testUser.email,
-        password: 'wrongpassword'
+        password: 'wrongpassword',
       });
 
     expect(res.statusCode).toBe(401);
@@ -72,7 +76,7 @@ describe('Auth Endpoints (Register & Login)', () => {
       .post('/api/auth/login')
       .send({
         email: 'noexisto@example.com',
-        password: 'somepassword'
+        password: 'somepassword',
       });
 
     expect(res.statusCode).toBe(401);
@@ -80,11 +84,11 @@ describe('Auth Endpoints (Register & Login)', () => {
   });
 });
 
-describe('GET /api/auth/me (ruta protegida por el middleware de autenticación)', () => {
+describe('GET /api/auth/me (Ruta protegida)', () => {
   const meUser = {
     name: 'Me User',
     email: `me_${Date.now()}@example.com`,
-    password: 'Password123!'
+    password: 'Password123!',
   };
   let validToken;
 
@@ -97,7 +101,11 @@ describe('GET /api/auth/me (ruta protegida por el middleware de autenticación)'
   });
 
   afterAll(async () => {
-    await pool.query('DELETE FROM users WHERE email = $1', [meUser.email.toLowerCase()]);
+    try {
+      await pool.query('DELETE FROM users WHERE email = $1', [meUser.email.toLowerCase()]);
+    } catch (error) {
+      console.error('Error limpiando usuario me:', error);
+    }
   });
 
   test('con un token válido responde 200 y los datos del usuario', async () => {
@@ -118,7 +126,7 @@ describe('GET /api/auth/me (ruta protegida por el middleware de autenticación)'
   test('con un token expirado responde 401', async () => {
     const expiredToken = jwt.sign(
       { id: 1, email: meUser.email },
-      process.env.JWT_SECRET || 'secret_key',
+      process.env.JWT_SECRET || 'test_secret',
       { expiresIn: -10 }
     );
 

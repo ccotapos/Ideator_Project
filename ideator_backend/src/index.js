@@ -6,19 +6,33 @@ const projectRoutes = require('./routes/projects');
 
 const app = express();
 
-// Permite que el frontend (Vite, normalmente en localhost:5173) consuma esta API.
-// FRONTEND_ORIGIN se puede ajustar en .env si el frontend corre en otro puerto/dominio.
+// Lista de orígenes permitidos en desarrollo local y entorno
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN,
+  'http://localhost:5173',
+  'http://localhost:5174',
+].filter(Boolean);
+
+// Configuración de CORS dinámica
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Bloqueado por política CORS'));
+      }
+    },
   })
 );
 
 app.use(express.json());
 
+// Declaración estandarizada de rutas bajo el prefijo /api
 app.use('/api/auth', authRoutes);
-app.use('/projects', projectRoutes);
+app.use('/api/projects', projectRoutes);
 
+// Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
