@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getMyProjects } from '../api/projects.js';
 
@@ -61,7 +62,9 @@ export default function ProjectsListPage() {
           {projects.map((project) => (
             <li key={project.id} className="project-card">
               <div>
-                <h3>{project.nombre}</h3>
+                <h3>
+                  <Link to={`/proyectos/${project.id}`}>{project.nombre}</Link>
+                </h3>
                 {project.descripcion ? <p>{project.descripcion}</p> : null}
               </div>
               <div className="project-meta">

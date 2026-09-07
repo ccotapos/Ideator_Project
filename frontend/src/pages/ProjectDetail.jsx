@@ -1,14 +1,16 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ProjectMembers } from '../components/ProjectMembers';
 
-export const ProjectDetail = () => {
-  const { id } = useParams(); // Asumiendo uso de react-router-dom
+export default function ProjectDetail() {
+  const { id } = useParams();
 
   return (
-    <div>
-      <h1>Detalle del Proyecto #{id}</h1>
+    <section className="page-section">
+      <div className="page-heading">
+        <p className="panel-kicker">Proyecto #{id}</p>
+        <h2>Invitar colaboradores</h2>
+      </div>
       <ProjectMembers projectId={id} />
-    </div>
+    </section>
   );
-};
+}

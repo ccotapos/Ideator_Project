@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage.jsx';
 import IdeasPage from './pages/IdeasPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import ProjectDetail from './pages/ProjectDetail.jsx';
 import ProjectsListPage from './pages/ProjectsListPage.jsx';
 import SsoCallbackPage from './pages/SsoCallbackPage.jsx';
 
@@ -32,6 +33,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ProjectsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="proyectos/:id"
+            element={
+              <ProtectedRoute>
+                <ProjectDetail />
               </ProtectedRoute>
             }
           />

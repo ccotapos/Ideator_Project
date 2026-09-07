@@ -93,6 +93,13 @@ h1 {
   gap: 16px;
 }
 
+.page-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
 .placeholder-panel {
   max-width: 680px;
   padding: 28px;
@@ -215,7 +222,24 @@ h1 {
   font-family: inherit;
 }
 
+.form-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c8d1df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
 .form-field input:focus {
+  outline: 2px solid #2364aa;
+  outline-offset: 1px;
+  border-color: #2364aa;
+}
+
+.form-field select:focus {
   outline: 2px solid #2364aa;
   outline-offset: 1px;
   border-color: #2364aa;
@@ -314,6 +338,14 @@ h1 {
   color: #111827;
 }
 
+.project-card h3 a {
+  text-decoration: none;
+}
+
+.project-card h3 a:hover {
+  color: #2364aa;
+}
+
 .project-card p {
   margin: 0;
   color: #475467;
@@ -380,4 +412,115 @@ h1 {
 .btn-google:hover {
   border-color: #2364aa;
   color: #2364aa;
+}
+
+/* --- Colaboradores --- */
+
+.members-panel {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+  padding: 24px;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 36px rgba(31, 41, 55, 0.08);
+}
+
+.invite-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(140px, 180px) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.invite-form .form-field {
+  margin-bottom: 0;
+}
+
+.invite-submit {
+  width: auto;
+  min-width: 116px;
+}
+
+.members-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e4e7ec;
+}
+
+.members-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.15rem;
+}
+
+.members-header span,
+.muted-text {
+  color: #667085;
+  font-size: 0.9rem;
+}
+
+.muted-text {
+  margin: 0;
+}
+
+.members-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eef2f6;
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.member-row strong {
+  color: #111827;
+}
+
+.member-row div span {
+  color: #475467;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .invite-form {
+    grid-template-columns: 1fr;
+  }
+
+  .invite-submit {
+    width: 100%;
+  }
+
+  .project-card,
+  .member-row,
+  .members-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-meta {
+    align-items: flex-start;
+    white-space: normal;
+  }
 }
