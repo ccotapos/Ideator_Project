@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react';
-import { loginRequest, registerRequest } from '../api/auth.js';
+import { loginRequest, registerRequest, meRequest } from '../api/auth.js';
 
 const STORAGE_KEY = 'ideator.auth';
 
@@ -40,6 +40,14 @@ export function AuthProvider({ children }) {
     return registerRequest({ name, email, password });
   };
 
+  const loginWithSsoToken = async (token) => {
+    const data = await meRequest(token);
+    const nextSession = { user: data.user, token };
+    setSession(nextSession);
+    writeStoredSession(nextSession);
+    return data;
+  };
+
   const logout = () => {
     setSession(null);
     writeStoredSession(null);
@@ -53,6 +61,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      loginWithSsoToken,
     }),
     [session]
   );

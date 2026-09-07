@@ -49,6 +49,27 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/projects - Listar los proyectos donde el usuario es owner o colaborador
+router.get('/', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.nombre, p.descripcion, p.is_private, p.updated_at, pu.rol
+       FROM proyectos p
+       JOIN proyecto_usuario pu ON pu.proyecto_id = p.id
+       WHERE pu.usuario_id = $1
+       ORDER BY p.updated_at DESC;`,
+      [userId]
+    );
+
+    return res.status(200).json({ projects: result.rows });
+  } catch (error) {
+    console.error('Error al listar proyectos:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
 // GET /api/projects/:id/members - Listar participantes y sus roles
 router.get('/:id/members', authenticateToken, async (req, res) => {
   const projectId = req.params.id;

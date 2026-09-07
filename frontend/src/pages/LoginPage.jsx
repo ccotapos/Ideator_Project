@@ -89,6 +89,12 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="auth-divider"><span>o</span></div>
+
+        <a href="/api/auth/sso/login" className="btn-google">
+          Continuar con Google
+        </a>
+
         <p className="auth-switch">
           ¿No tienes cuenta? <Link to="/register">Crea una aquí</Link>
         </p>
