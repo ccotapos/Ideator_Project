@@ -86,6 +86,29 @@ describe('Projects Endpoints', () => {
     });
   });
 
+  describe('GET /api/projects - Listado de proyectos', () => {
+  test('retorna solo los proyectos del usuario, con su rol y fecha de modificación', async () => {
+    const mockProjects = [
+      { id: 1, nombre: 'Proyecto A', is_private: true, updated_at: new Date().toISOString(), rol: 'owner' },
+      { id: 2, nombre: 'Proyecto B', is_private: false, updated_at: new Date().toISOString(), rol: 'editor' },
+    ];
+    pool.query.mockResolvedValueOnce({ rows: mockProjects });
+
+    const res = await request(app)
+      .get('/api/projects')
+      .set('Authorization', `Bearer ${ownerToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.projects).toHaveLength(2);
+    expect(res.body.projects[0].rol).toBe('owner');
+  });
+
+  test('retorna 401 si no hay token', async () => {
+    const res = await request(app).get('/api/projects');
+    expect(res.statusCode).toBe(401);
+  });
+});
+
   describe('GET /api/projects/:id/members - Listar Miembros', () => {
     test('debe retornar 403 si el usuario no pertenece al proyecto', async () => {
       pool.query.mockResolvedValueOnce({ rows: [] }); // memberCheck sin resultados

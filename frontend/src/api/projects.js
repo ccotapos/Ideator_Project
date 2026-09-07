@@ -16,3 +16,9 @@ export const inviteMember = async (projectId, email, role = 'editor') => {
     body: { email, role },
   });
 };
+
+// Obtener los proyectos donde el usuario autenticado es owner o colaborador
+export const getMyProjects = async (token) => {
+  const data = await apiFetch('/api/projects', { token });
+  return data.projects;
+};

@@ -23,3 +23,12 @@ export function loginRequest({ email, password }) {
     body: { email, password },
   });
 }
+
+/**
+ * GET /api/auth/me
+ * Devuelve { user } a partir de un token válido.
+ * Se usa tras el callback de SSO, donde solo recibimos el token por URL.
+ */
+export function meRequest(token) {
+  return apiFetch('/api/auth/me', { token });
+}

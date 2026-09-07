@@ -28,6 +28,11 @@ services:
       - DB_NAME=${DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_ORIGIN=${FRONTEND_ORIGIN}
+      - SSO_ISSUER_URL=${SSO_ISSUER_URL}
+      - SSO_CLIENT_ID=${SSO_CLIENT_ID}
+      - SSO_CLIENT_SECRET=${SSO_CLIENT_SECRET}
+      - SSO_REDIRECT_URI=${SSO_REDIRECT_URI}
+      - SSO_PROVIDER_NAME=${SSO_PROVIDER_NAME}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules

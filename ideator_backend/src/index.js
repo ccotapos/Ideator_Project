@@ -3,6 +3,7 @@ const cors = require('cors');
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
+const ssoRoutes = require('./routes/sso');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(express.json());
 // Declaración estandarizada de rutas bajo el prefijo /api
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/auth/sso', ssoRoutes);
 
 // Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {
