@@ -4,6 +4,7 @@ const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const ssoRoutes = require('./routes/sso');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/auth/sso', ssoRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/projects', chatRoutes);
 
 // Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {

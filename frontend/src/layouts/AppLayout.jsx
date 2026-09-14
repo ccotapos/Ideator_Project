@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const navItems = [
@@ -39,7 +39,9 @@ export default function AppLayout() {
 
         {user ? (
           <div className="session-info">
-            <span className="session-user">{user.name}</span>
+            <Link to="/perfil" className="session-user">
+              {user.name || user.email}
+            </Link>
             <button type="button" className="btn-secondary" onClick={handleLogout}>
               Salir
             </button>

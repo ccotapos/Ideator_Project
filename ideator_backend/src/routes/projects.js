@@ -103,6 +103,75 @@ router.get('/:id/members', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/projects/:id - Obtener el detalle de un proyecto
+router.get('/:id', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const memberCheck = await pool.query(
+      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
+      [userId, projectId]
+    );
+
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
+    }
+
+    const projectResult = await pool.query(
+      `SELECT id, nombre, descripcion, is_private, created_at, updated_at
+       FROM proyectos WHERE id = $1;`,
+      [projectId]
+    );
+
+    if (projectResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Proyecto no encontrado.' });
+    }
+
+    return res.status(200).json({
+      project: projectResult.rows[0],
+      role: memberCheck.rows[0].rol,
+    });
+  } catch (error) {
+    console.error('Error al obtener el proyecto:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
+// PUT /api/projects/:id - Editar nombre/descripción (solo el owner)
+router.put('/:id', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+  const userId = req.user.id;
+  const { nombre, descripcion } = req.body;
+
+  if (!nombre || !nombre.trim()) {
+    return res.status(400).json({ message: 'El nombre del proyecto es obligatorio.' });
+  }
+
+  try {
+    const memberCheck = await pool.query(
+      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
+      [userId, projectId]
+    );
+
+    if (memberCheck.rows.length === 0 || memberCheck.rows[0].rol !== 'owner') {
+      return res.status(403).json({ message: 'Acceso denegado. Solo el dueño del proyecto puede editarlo.' });
+    }
+
+    const updateResult = await pool.query(
+      `UPDATE proyectos SET nombre = $1, descripcion = $2
+       WHERE id = $3
+       RETURNING id, nombre, descripcion, is_private, created_at, updated_at;`,
+      [nombre.trim(), descripcion?.trim() || null, projectId]
+    );
+
+    return res.status(200).json({ project: updateResult.rows[0] });
+  } catch (error) {
+    console.error('Error al actualizar el proyecto:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
 // POST /api/projects/:id/invite - Invitar a un colaborador por correo
 router.post('/:id/invite', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
@@ -147,6 +216,13 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
     if (existingMemberCheck.rows.length > 0) {
       return res.status(409).json({ message: 'El usuario ya pertenece a este proyecto.' });
     }
+
+    const projectResult = await client.query(
+      `INSERT INTO proyectos (nombre, descripcion, is_private)
+       VALUES ($1, $2, TRUE)
+       RETURNING id, nombre, descripcion, is_private, created_at, updated_at;`,
+      [nombre, descripcion || null]
+    );
 
     // Asignar al proyecto
     await pool.query(

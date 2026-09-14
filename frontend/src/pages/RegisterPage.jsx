@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { validateRegisterForm } from '../utils/validation.js';
+import AuthPromoPanel from '../components/AuthPromoPanel.jsx';
 
 const INITIAL_FORM = { name: '', email: '', password: '', confirmPassword: '' };
 
@@ -57,8 +58,9 @@ export default function RegisterPage() {
 
   return (
     <section className="auth-section">
+      <AuthPromoPanel />
+
       <article className="auth-card">
-        <p className="panel-kicker">Ideator</p>
         <h2>Crea tu cuenta</h2>
         <p className="auth-subtitle">Regístrate para empezar a organizar tus proyectos.</p>
 
@@ -75,13 +77,13 @@ export default function RegisterPage() {
 
           <FormField
             id="email"
-            label="Correo electrónico"
+            label="Email"
             type="email"
             value={form.email}
             onChange={handleChange}
             error={fieldErrors.email}
             autoComplete="email"
-            placeholder="tu@correo.com"
+            placeholder="equipo@empresa.com"
           />
 
           <FormField
@@ -122,6 +124,12 @@ export default function RegisterPage() {
             {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
           </button>
         </form>
+
+        <div className="auth-divider"><span>o</span></div>
+
+        <a href="/api/auth/sso/login" className="btn-google">
+          Continuar con Google
+        </a>
 
         <p className="auth-switch">
           ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>

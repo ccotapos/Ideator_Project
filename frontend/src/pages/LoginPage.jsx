@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { validateLoginForm } from '../utils/validation.js';
+import AuthPromoPanel from '../components/AuthPromoPanel.jsx';
 
 const INITIAL_FORM = { email: '', password: '' };
 
@@ -50,21 +51,22 @@ export default function LoginPage() {
 
   return (
     <section className="auth-section">
+      <AuthPromoPanel />
+
       <article className="auth-card">
-        <p className="panel-kicker">Ideator</p>
-        <h2>Inicia sesión</h2>
-        <p className="auth-subtitle">Accede a tu cuenta para ver y crear proyectos.</p>
+        <h2>Bienvenido</h2>
+        <p className="auth-subtitle">Continúa trabajando con tu equipo en Ideator.</p>
 
         <form onSubmit={handleSubmit} noValidate>
           <FormField
             id="email"
-            label="Correo electrónico"
+            label="Email"
             type="email"
             value={form.email}
             onChange={handleChange}
             error={fieldErrors.email}
             autoComplete="email"
-            placeholder="tu@correo.com"
+            placeholder="equipo@empresa.com"
           />
 
           <FormField
@@ -75,7 +77,7 @@ export default function LoginPage() {
             onChange={handleChange}
             error={fieldErrors.password}
             autoComplete="current-password"
-            placeholder="••••••••"
+            placeholder="Mínimo 8 caracteres"
           />
 
           {formError ? (

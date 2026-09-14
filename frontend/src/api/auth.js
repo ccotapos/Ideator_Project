@@ -32,3 +32,16 @@ export function loginRequest({ email, password }) {
 export function meRequest(token) {
   return apiFetch('/api/auth/me', { token });
 }
+
+/**
+ * PUT /api/auth/me
+ * Actualiza nombre y/o correo del usuario autenticado.
+ * Devuelve { user } con los datos ya actualizados.
+ */
+export function updateProfileRequest({ name, email }, token) {
+  return apiFetch('/api/auth/me', {
+    method: 'PUT',
+    token,
+    body: { name, email },
+  });
+}
