@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react';
-import { loginRequest, registerRequest, meRequest } from '../api/auth.js';
+import { loginRequest, registerRequest, meRequest, updateProfileRequest } from '../api/auth.js';
 
 const STORAGE_KEY = 'ideator.auth';
 
@@ -40,12 +40,22 @@ export function AuthProvider({ children }) {
     return registerRequest({ name, email, password });
   };
 
+  // Completa la sesión a partir de un token recibido desde el callback de SSO
   const loginWithSsoToken = async (token) => {
     const data = await meRequest(token);
     const nextSession = { user: data.user, token };
     setSession(nextSession);
     writeStoredSession(nextSession);
     return data;
+  };
+
+  // Actualiza nombre/correo del usuario autenticado
+  const updateProfile = async (profileData) => {
+    const data = await updateProfileRequest(profileData, session?.token);
+    const nextSession = { ...session, user: data.user };
+    setSession(nextSession);
+    writeStoredSession(nextSession);
+    return data.user;
   };
 
   const logout = () => {
@@ -62,6 +72,7 @@ export function AuthProvider({ children }) {
       register,
       logout,
       loginWithSsoToken,
+      updateProfile,
     }),
     [session]
   );

@@ -9,6 +9,8 @@ import RegisterPage from './pages/RegisterPage.jsx';
 import ProjectDetail from './pages/ProjectDetail.jsx';
 import ProjectsListPage from './pages/ProjectsListPage.jsx';
 import SsoCallbackPage from './pages/SsoCallbackPage.jsx';
+import ProjectChatPage from './pages/ProjectChatPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 
 export default function App() {
   return (
@@ -24,6 +26,33 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+
+                    <Route
+            path="proyectos/:id"
+            element={
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="proyectos/:id/chat"
+            element={
+              <ProtectedRoute>
+                <ProjectChatPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="perfil"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />
