@@ -45,6 +45,7 @@ describe('Projects Endpoints', () => {
         .mockResolvedValueOnce({}) // BEGIN
         .mockResolvedValueOnce({ rows: [createdProject] }) // INSERT INTO proyectos
         .mockResolvedValueOnce({}) // INSERT INTO proyecto_usuario
+        .mockResolvedValueOnce({}) // INSERT INTO actividad_proyecto
         .mockResolvedValueOnce({}); // COMMIT
 
       const res = await request(app)
@@ -141,6 +142,66 @@ describe('Projects Endpoints', () => {
     });
   });
 
+  describe('Trazabilidad de cambios', () => {
+    test('GET /api/projects/:id/activity devuelve el historial ordenado', async () => {
+      const activity = [
+        {
+          id: 2,
+          accion: 'project_updated',
+          usuario_id: 7,
+          usuario_nombre: 'Owner User',
+          created_at: '2026-09-21T20:00:00.000Z',
+        },
+        {
+          id: 1,
+          accion: 'project_created',
+          usuario_id: 7,
+          usuario_nombre: 'Owner User',
+          created_at: '2026-09-21T19:00:00.000Z',
+        },
+      ];
+
+      pool.query
+        .mockResolvedValueOnce({ rows: [{ rol: 'owner' }] })
+        .mockResolvedValueOnce({ rows: activity });
+
+      const res = await request(app)
+        .get('/api/projects/10/activity')
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.activity).toEqual(activity);
+      expect(pool.query).toHaveBeenLastCalledWith(
+        expect.stringContaining('ORDER BY a.created_at DESC'),
+        ['10']
+      );
+    });
+
+    test('guarda como autor al usuario autenticado al editar el proyecto', async () => {
+      const updatedProject = {
+        id: 10,
+        nombre: 'Proyecto actualizado',
+        descripcion: 'Nueva descripción',
+      };
+
+      pool.query
+        .mockResolvedValueOnce({ rows: [{ rol: 'owner' }] })
+        .mockResolvedValueOnce({ rows: [updatedProject] })
+        .mockResolvedValueOnce({});
+
+      const res = await request(app)
+        .put('/api/projects/10')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ nombre: 'Proyecto actualizado', descripcion: 'Nueva descripción' });
+
+      expect(res.statusCode).toBe(200);
+      expect(pool.query).toHaveBeenLastCalledWith(
+        expect.stringContaining('INSERT INTO actividad_proyecto'),
+        ['10', 7, 'project_updated', JSON.stringify({ nombre: 'Proyecto actualizado' })]
+      );
+    });
+  });
+
   describe('POST /api/projects/:id/invite - Invitar Miembro', () => {
     test('debe retornar 403 si el usuario solicitante no es owner', async () => {
       pool.query.mockResolvedValueOnce({ rows: [{ rol: 'editor' }] }); // ownerCheck (es colaborador, no owner)
@@ -188,7 +249,8 @@ describe('Projects Endpoints', () => {
         .mockResolvedValueOnce({ rows: [{ rol: 'owner' }] }) // ownerCheck
         .mockResolvedValueOnce({ rows: [{ id: 3, name: 'New User', email: 'newuser@example.com' }] }) // targetUserResult
         .mockResolvedValueOnce({ rows: [] }) // existingMemberCheck no lo encuentra
-        .mockResolvedValueOnce({}); // INSERT INTO proyecto_usuario
+        .mockResolvedValueOnce({}) // INSERT INTO proyecto_usuario
+        .mockResolvedValueOnce({}); // INSERT INTO actividad_proyecto
 
       const res = await request(app)
         .post('/api/projects/10/invite')

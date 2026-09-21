@@ -132,3 +132,18 @@ pnpm dev
 - `src/components`: componentes reutilizables.
 - `src/layouts`: estructura general de la aplicacion.
 - `src/pages`: pantallas conectadas al ruteo.
+
+## Historial de actividad
+
+La migración `007_create_actividad_proyecto.sql` crea la tabla
+`actividad_proyecto`, que conserva el proyecto, el autor, la fecha, el tipo de
+acción y sus detalles. Actualmente se registran la creación y edición de
+proyectos y las invitaciones de colaboradores.
+
+Un miembro del proyecto puede consultar el historial, ordenado desde el cambio
+más reciente, mediante:
+
+```http
+GET /api/projects/{id}/activity
+Authorization: Bearer <token>
+```

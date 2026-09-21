@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { recordActivity } = require('../services/activity');
 
 const router = express.Router();
 
@@ -32,6 +33,13 @@ router.post('/', authenticateToken, async (req, res) => {
        VALUES ($1, $2, 'owner');`,
       [userId, project.id]
     );
+
+    await recordActivity(client, {
+      projectId: project.id,
+      userId,
+      action: 'project_created',
+      details: { nombre: project.nombre },
+    });
 
     await client.query('COMMIT');
 
@@ -103,6 +111,38 @@ router.get('/:id/members', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/projects/:id/activity - Historial de cambios, del más reciente al más antiguo
+router.get('/:id/activity', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    const memberCheck = await pool.query(
+      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
+      [userId, projectId]
+    );
+
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
+    }
+
+    const activityResult = await pool.query(
+      `SELECT a.id, a.accion, a.detalles, a.created_at,
+              u.id AS usuario_id, u.name AS usuario_nombre, u.email AS usuario_email
+       FROM actividad_proyecto a
+       LEFT JOIN users u ON u.id = a.usuario_id
+       WHERE a.proyecto_id = $1
+       ORDER BY a.created_at DESC, a.id DESC;`,
+      [projectId]
+    );
+
+    return res.status(200).json({ activity: activityResult.rows });
+  } catch (error) {
+    console.error('Error al obtener la actividad del proyecto:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
 // GET /api/projects/:id - Obtener el detalle de un proyecto
 router.get('/:id', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
@@ -165,6 +205,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
       [nombre.trim(), descripcion?.trim() || null, projectId]
     );
 
+    await recordActivity(pool, {
+      projectId,
+      userId,
+      action: 'project_updated',
+      details: { nombre: nombre.trim() },
+    });
+
     return res.status(200).json({ project: updateResult.rows[0] });
   } catch (error) {
     console.error('Error al actualizar el proyecto:', error);
@@ -182,7 +229,11 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: 'El correo electrónico del usuario es obligatorio.' });
   }
 
-  const assignedRole = role || 'collaborator';
+  const assignedRole = role || 'editor';
+
+  if (!['editor', 'viewer'].includes(assignedRole)) {
+    return res.status(400).json({ message: 'El rol debe ser editor o viewer.' });
+  }
 
   try {
     // Validar permisos: solo el 'owner' puede invitar
@@ -217,19 +268,23 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
       return res.status(409).json({ message: 'El usuario ya pertenece a este proyecto.' });
     }
 
-    const projectResult = await client.query(
-      `INSERT INTO proyectos (nombre, descripcion, is_private)
-       VALUES ($1, $2, TRUE)
-       RETURNING id, nombre, descripcion, is_private, created_at, updated_at;`,
-      [nombre, descripcion || null]
-    );
-
     // Asignar al proyecto
     await pool.query(
       `INSERT INTO proyecto_usuario (usuario_id, proyecto_id, rol)
        VALUES ($1, $2, $3);`,
       [targetUser.id, projectId, assignedRole]
     );
+
+    await recordActivity(pool, {
+      projectId,
+      userId,
+      action: 'member_invited',
+      details: {
+        invitedUserId: targetUser.id,
+        invitedUserEmail: targetUser.email,
+        role: assignedRole,
+      },
+    });
 
     return res.status(201).json({
       message: 'Usuario añadido al proyecto exitosamente.',
