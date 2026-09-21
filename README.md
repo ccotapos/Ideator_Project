@@ -147,3 +147,34 @@ más reciente, mediante:
 GET /api/projects/{id}/activity
 Authorization: Bearer <token>
 ```
+
+## Modelo conversacional
+
+La migración `008_create_conversation_model.sql` completa el modelo de datos
+del proceso guiado:
+
+- `sesiones`: agrupa una conversación de un proyecto y registra quién la creó,
+  su estado y sus fechas de inicio y cierre.
+- `mensajes`: cada mensaje pertenece a una sesión y conserva su remitente y,
+  cuando corresponde, el usuario que lo escribió.
+- `decisiones`: pertenece a una sesión y exige un `usuario_id`, por lo que cada
+  acuerdo mantiene la trazabilidad de la persona que lo tomó.
+
+Endpoints disponibles para miembros del proyecto:
+
+```http
+GET  /api/projects/{id}/sessions
+GET  /api/projects/{id}/messages
+POST /api/projects/{id}/messages
+GET  /api/projects/{id}/decisions
+POST /api/projects/{id}/decisions
+```
+
+Ejemplo para registrar una decisión:
+
+```json
+{
+  "title": "Base de datos",
+  "content": "Usaremos PostgreSQL"
+}
+```
