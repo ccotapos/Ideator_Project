@@ -178,3 +178,23 @@ Ejemplo para registrar una decisión:
   "content": "Usaremos PostgreSQL"
 }
 ```
+
+## Definición inicial y MVP
+
+La migración `009_create_project_definition.sql` agrega tres estructuras:
+
+- `definicion_secciones`: respuestas separadas para problema, contexto y
+  usuarios objetivo.
+- `mvp_funcionalidades`: funcionalidades marcadas explícitamente dentro o
+  fuera del MVP.
+- `recorrido_principal`: secuencia ordenada de pasos del producto.
+
+El flujo está disponible para miembros del proyecto. Los roles `owner` y
+`editor` pueden modificarlo; `viewer` solo puede consultarlo.
+
+```http
+GET /api/projects/{id}/definition/questions
+PUT /api/projects/{id}/definition/sections
+PUT /api/projects/{id}/definition/mvp
+GET /api/projects/{id}/definition
+```
