@@ -11,6 +11,7 @@ import ProjectsListPage from './pages/ProjectsListPage.jsx';
 import SsoCallbackPage from './pages/SsoCallbackPage.jsx';
 import ProjectChatPage from './pages/ProjectChatPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import ReviewDefinitionPage from './pages/ReviewDefinitionPage.jsx';
 
 export default function App() {
   return (
@@ -30,7 +31,7 @@ export default function App() {
             }
           />
 
-                    <Route
+          <Route
             path="proyectos/:id"
             element={
               <ProtectedRoute>
@@ -44,6 +45,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ProjectChatPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 2. Agregar la ruta para la pantalla de revisión de la definición */}
+          <Route
+            path="proyectos/:id/definicion/revision"
+            element={
+              <ProtectedRoute>
+                <ReviewDefinitionPage />
               </ProtectedRoute>
             }
           />
@@ -65,14 +76,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="proyectos/:id"
-            element={
-              <ProtectedRoute>
-                <ProjectDetail />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="ideas"
             element={

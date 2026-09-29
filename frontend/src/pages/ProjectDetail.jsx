@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import FormField from '../components/FormField.jsx';
 import { ProjectMembers } from '../components/ProjectMembers.jsx';
 import ProjectChatPanel from '../components/ProjectChatPanel.jsx';
+import ReviewDefinitionPage from './ReviewDefinitionPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -20,7 +21,12 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'chat' ? 'chat' : 'resumen');
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'chat') return 'chat';
+    if (tab === 'revision') return 'revision';
+    return 'resumen';
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ nombre: '', descripcion: '' });
@@ -177,9 +183,18 @@ export default function ProjectDetail() {
         >
           Chat con Ideator
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'revision' ? 'active' : ''}`}
+          onClick={() => setActiveTab('revision')}
+        >
+          Revisión Inicial
+        </button>
       </div>
 
-      {activeTab === 'resumen' ? <ProjectMembers projectId={projectId} /> : <ProjectChatPanel projectId={projectId} />}
+      {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
+      {activeTab === 'chat' && <ProjectChatPanel projectId={projectId} />}
+      {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} />}
     </section>
   );
 }
