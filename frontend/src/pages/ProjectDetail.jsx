@@ -5,6 +5,7 @@ import FormField from '../components/FormField.jsx';
 import { ProjectMembers } from '../components/ProjectMembers.jsx';
 import ProjectChatPanel from '../components/ProjectChatPanel.jsx';
 import ReviewDefinitionPage from './ReviewDefinitionPage.jsx';
+import DataModelPage from './DataModelPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -25,6 +26,7 @@ export default function ProjectDetail() {
     const tab = searchParams.get('tab');
     if (tab === 'chat') return 'chat';
     if (tab === 'revision') return 'revision';
+    if (tab === 'modelo') return 'modelo';
     return 'resumen';
   });
 
@@ -190,11 +192,19 @@ export default function ProjectDetail() {
         >
           Revisión Inicial
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'modelo' ? 'active' : ''}`}
+          onClick={() => setActiveTab('modelo')}
+        >
+          Modelo de datos
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
       {activeTab === 'chat' && <ProjectChatPanel projectId={projectId} />}
       {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} />}
+      {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}
     </section>
   );
 }

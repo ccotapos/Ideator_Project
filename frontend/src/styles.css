@@ -168,6 +168,49 @@ h1 {
   color: #2364aa;
 }
 
+.btn-primary,
+.btn-approve {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #fff;
+  background: #2364aa;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-approve { background: #13795b; }
+button:disabled { cursor: wait; opacity: 0.6; }
+
+.data-model-page { display: grid; gap: 20px; }
+.data-model-toolbar, .data-model-actions, .er-entity header, .er-entity li, .er-entity footer { display: flex; align-items: center; }
+.data-model-toolbar { justify-content: space-between; gap: 16px; }
+.data-model-toolbar h3, .data-model-toolbar p { margin: 0; }
+.data-model-toolbar p { color: #667085; margin-top: 4px; }
+.data-model-actions { flex-wrap: wrap; gap: 8px; }
+.data-model-message { margin: 0; padding: 10px 12px; border-left: 4px solid #2364aa; background: #eaf2fb; }
+.data-model-empty { padding: 36px; border: 1px dashed #98a2b3; text-align: center; background: #fff; }
+.data-model-empty p { margin: 8px 0 0; color: #667085; }
+.er-diagram { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); align-items: start; gap: 16px; padding: 20px; overflow: auto; border: 1px solid #d8dee8; background: #eef1f5; }
+.er-entity { min-width: 0; border: 1px solid #98a2b3; border-radius: 6px; background: #fff; box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08); }
+.er-entity header { justify-content: space-between; min-height: 44px; padding: 10px 12px; background: #243b53; color: #fff; }
+.er-entity header button { color: #fff; }
+.er-entity button { border: 0; background: transparent; cursor: pointer; font-weight: 700; }
+.er-entity ul { margin: 0; padding: 0; list-style: none; }
+.er-entity li { justify-content: space-between; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #eaecf0; font-family: ui-monospace, monospace; font-size: 0.82rem; }
+.er-entity li span { overflow-wrap: anywhere; }
+.er-entity li button { margin-left: 6px; color: #b42318; font-size: 1rem; }
+.er-entity footer { justify-content: space-between; padding: 8px 12px; }
+.danger-link { color: #b42318; }
+.relationship-list { padding: 16px 0; border-top: 1px solid #d8dee8; }
+.relationship-list h4 { margin: 0 0 10px; }
+.relationship-list p { margin: 6px 0; color: #475467; }
+
+@media (max-width: 640px) {
+  .data-model-toolbar { align-items: flex-start; flex-direction: column; }
+  .data-model-actions { width: 100%; }
+}
+
 /* --- Autenticación (login / registro) --- */
 
 .auth-section {

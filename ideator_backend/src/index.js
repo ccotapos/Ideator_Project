@@ -6,6 +6,7 @@ const projectRoutes = require('./routes/projects');
 const ssoRoutes = require('./routes/sso');
 const chatRoutes = require('./routes/chat');
 const definitionRoutes = require('./routes/definition');
+const dataModelRoutes = require('./routes/dataModels');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/auth/sso', ssoRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/projects', chatRoutes);
 app.use('/api/projects', definitionRoutes);
+app.use('/api/projects', dataModelRoutes);
 
 // Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {
