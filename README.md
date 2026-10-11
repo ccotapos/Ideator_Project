@@ -90,19 +90,42 @@ Respuestas principales:
 
 ## Ejecución de Migraciones
 
-La base de datos se ejecuta sobre PostgreSQL en Docker.
+La base de datos se ejecuta sobre PostgreSQL en Docker. Las migraciones viven en
+`migrations/` y las aplica un **runner** que registra cada archivo aplicado en la
+tabla `schema_migrations`, por lo que solo ejecuta las pendientes y es seguro
+reiniciar.
 
-### Opción A: Desde pgAdmin 4 (Recomendado)
+### Opción A: Automática (Recomendada)
+
+El backend aplica las migraciones pendientes **al arrancar**. Basta con levantar
+los servicios:
+
+```bash
+cd ideator_backend
+docker compose up
+```
+
+También se pueden forzar manualmente con:
+
+```bash
+docker exec ideator_backend_container npm run migrate
+```
+
+### Opción B: Desde pgAdmin 4
+
 1. Conéctate al servidor de PostgreSQL en la base de datos `ideator_db`.
 2. Abre la **Query Tool** en `ideator_db`.
-3. Copia y ejecuta el contenido de `migrations/001_create_proyecto_usuario.sql`.
-4. Copia y ejecuta el contenido de `migrations/002_add_project_privacy.sql`.
+3. Ejecuta los archivos de `migrations/` en orden (001, 002, 003…).
 
-### Opción B: Desde CLI (Docker container)
+### Opción C: Desde CLI (Docker container)
+
 ```bash
-docker exec -i <nombre_contenedor_postgres> psql -U postgres -d ideator_db < migrations/001_create_proyecto_usuario.sql
-docker exec -i <nombre_contenedor_postgres> psql -U postgres -d ideator_db < migrations/002_add_project_privacy.sql
+docker exec ideator_db_container psql -U postgres -d ideator_db -f /docker-entrypoint-initdb.d/006_create_mensajes.sql
 ```
+
+> Nota: el montaje `./migrations:/docker-entrypoint-initdb.d` solo se ejecuta la
+> **primera vez** que se crea el volumen de Postgres. Para bases ya existentes,
+> usa la Opción A (runner) o la Opción B/C para aplicar las migraciones nuevas.
 
 Para correr la suite de pruebas automatizadas con Jest y Supertest:
 
@@ -198,3 +221,45 @@ PUT /api/projects/{id}/definition/sections
 PUT /api/projects/{id}/definition/mvp
 GET /api/projects/{id}/definition
 ```
+
+## Especificación de endpoints vía IA
+
+La migración `011_create_endpoint_spec.sql` agrega la especificación de endpoints
+del producto:
+
+- `especificaciones_endpoints`: cabecera por proyecto con su estado
+  (`draft` / `approved`) y la referencia al modelo de datos usado como base.
+- `endpoints`: cada endpoint con su método HTTP, ruta, operación y la entidad
+  del modelo de datos sobre la que opera.
+
+La especificación **solo puede generarse a partir de un modelo de datos
+aprobado**, por lo que es coherente con el modelo vigente. Los roles `owner` y
+`editor` pueden generarla y regenerarla mientras esté en borrador; solo el
+`owner` puede aprobarla, tras lo cual queda bloqueada.
+
+La migración `012_endpoint_spec_attributes.sql` agrega a cada endpoint los
+**atributos** del modelo de datos que utiliza, lo que permite validar la
+consistencia entre la API y el modelo.
+
+```http
+GET  /api/projects/{id}/endpoint-spec
+POST /api/projects/{id}/endpoint-spec/generate
+GET  /api/projects/{id}/endpoint-spec/validation
+POST /api/projects/{id}/endpoint-spec/approve
+```
+
+Cada endpoint generado indica siempre **método HTTP**, **ruta** y **operación**.
+
+## Validación de consistencia API ↔ modelo de datos
+
+El validador (`services/consistencyValidator.js`) compara cada endpoint con el
+modelo aprobado y reporta inconsistencias:
+
+- `entidad_faltante`: endpoint que no referencia ninguna entidad.
+- `entidad_inexistente`: entidad que no existe en el modelo aprobado.
+- `atributo_inexistente`: atributo que no pertenece a esa entidad.
+
+`GET /api/projects/{id}/endpoint-spec/validation` devuelve
+`{ validation: { consistent, issues } }`. La aprobación queda **bloqueada**
+(respuesta `409` con la lista de `issues`) mientras existan inconsistencias, y la
+pantalla "Endpoints (API)" las muestra al usuario antes de continuar.
