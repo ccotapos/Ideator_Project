@@ -7,6 +7,8 @@ const ssoRoutes = require('./routes/sso');
 const chatRoutes = require('./routes/chat');
 const definitionRoutes = require('./routes/definition');
 const dataModelRoutes = require('./routes/dataModels');
+const endpointSpecRoutes = require('./routes/endpointSpec');
+const { runMigrations } = require('./db/migrate');
 
 const app = express();
 
@@ -40,6 +42,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/projects', chatRoutes);
 app.use('/api/projects', definitionRoutes);
 app.use('/api/projects', dataModelRoutes);
+app.use('/api/projects', endpointSpecRoutes);
 
 // Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {
@@ -53,6 +56,29 @@ app.get('/health', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Backend escuchando en el puerto ${PORT}`);
+
+// Aplica las migraciones pendientes antes de aceptar peticiones. Reintenta por
+// si Postgres todavía no está listo al levantar los contenedores.
+async function startServer() {
+  const maxAttempts = 10;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await runMigrations();
+      break;
+    } catch (error) {
+      console.error(`Intento ${attempt}/${maxAttempts} de aplicar migraciones falló: ${error.message}`);
+      if (attempt === maxAttempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Backend escuchando en el puerto ${PORT}`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error('No se pudieron aplicar las migraciones al iniciar:', error.message);
+  process.exit(1);
 });

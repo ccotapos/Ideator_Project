@@ -6,6 +6,7 @@ import { ProjectMembers } from '../components/ProjectMembers.jsx';
 import ProjectChatPanel from '../components/ProjectChatPanel.jsx';
 import ReviewDefinitionPage from './ReviewDefinitionPage.jsx';
 import DataModelPage from './DataModelPage.jsx';
+import EndpointSpecPage from './EndpointSpecPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -27,6 +28,7 @@ export default function ProjectDetail() {
     if (tab === 'chat') return 'chat';
     if (tab === 'revision') return 'revision';
     if (tab === 'modelo') return 'modelo';
+    if (tab === 'endpoints') return 'endpoints';
     return 'resumen';
   });
 
@@ -199,12 +201,20 @@ export default function ProjectDetail() {
         >
           Modelo de datos
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'endpoints' ? 'active' : ''}`}
+          onClick={() => setActiveTab('endpoints')}
+        >
+          Endpoints (API)
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
       {activeTab === 'chat' && <ProjectChatPanel projectId={projectId} />}
       {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} />}
       {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}
+      {activeTab === 'endpoints' && <EndpointSpecPage projectId={projectId} role={role} />}
     </section>
   );
 }
