@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { verifyProjectRole } = authenticateToken;
 const { recordActivity } = require('../services/activity');
 
 const router = express.Router();
@@ -79,22 +80,10 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET /api/projects/:id/members - Listar participantes y sus roles
-router.get('/:id/members', authenticateToken, async (req, res) => {
+router.get('/:id/members', authenticateToken, verifyProjectRole(), async (req, res) => {
   const projectId = req.params.id;
-  const userId = req.user.id;
 
   try {
-    // Validar si el usuario solicitante pertenece al proyecto
-    const memberCheck = await pool.query(
-      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
-      [userId, projectId]
-    );
-
-    if (memberCheck.rows.length === 0) {
-      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
-    }
-
-    // Obtener miembros del proyecto
     const membersResult = await pool.query(
       `SELECT u.id, u.name, u.email, pu.rol, pu.created_at
        FROM proyecto_usuario pu
@@ -112,20 +101,10 @@ router.get('/:id/members', authenticateToken, async (req, res) => {
 });
 
 // GET /api/projects/:id/activity - Historial de cambios, del más reciente al más antiguo
-router.get('/:id/activity', authenticateToken, async (req, res) => {
+router.get('/:id/activity', authenticateToken, verifyProjectRole(), async (req, res) => {
   const projectId = req.params.id;
-  const userId = req.user.id;
 
   try {
-    const memberCheck = await pool.query(
-      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
-      [userId, projectId]
-    );
-
-    if (memberCheck.rows.length === 0) {
-      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
-    }
-
     const activityResult = await pool.query(
       `SELECT a.id, a.accion, a.detalles, a.created_at,
               u.id AS usuario_id, u.name AS usuario_nombre, u.email AS usuario_email
@@ -144,20 +123,10 @@ router.get('/:id/activity', authenticateToken, async (req, res) => {
 });
 
 // GET /api/projects/:id - Obtener el detalle de un proyecto
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, verifyProjectRole(), async (req, res) => {
   const projectId = req.params.id;
-  const userId = req.user.id;
 
   try {
-    const memberCheck = await pool.query(
-      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
-      [userId, projectId]
-    );
-
-    if (memberCheck.rows.length === 0) {
-      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
-    }
-
     const projectResult = await pool.query(
       `SELECT id, nombre, descripcion, is_private, created_at, updated_at
        FROM proyectos WHERE id = $1;`,
@@ -170,7 +139,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     return res.status(200).json({
       project: projectResult.rows[0],
-      role: memberCheck.rows[0].rol,
+      role: req.projectRole,
     });
   } catch (error) {
     console.error('Error al obtener el proyecto:', error);
@@ -179,7 +148,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/projects/:id - Editar nombre/descripción (solo el owner)
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, verifyProjectRole(['owner']), async (req, res) => {
   const projectId = req.params.id;
   const userId = req.user.id;
   const { nombre, descripcion } = req.body;
@@ -189,15 +158,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 
   try {
-    const memberCheck = await pool.query(
-      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
-      [userId, projectId]
-    );
-
-    if (memberCheck.rows.length === 0 || memberCheck.rows[0].rol !== 'owner') {
-      return res.status(403).json({ message: 'Acceso denegado. Solo el dueño del proyecto puede editarlo.' });
-    }
-
     const updateResult = await pool.query(
       `UPDATE proyectos SET nombre = $1, descripcion = $2
        WHERE id = $3
@@ -220,7 +180,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // POST /api/projects/:id/invite - Invitar a un colaborador por correo
-router.post('/:id/invite', authenticateToken, async (req, res) => {
+router.post('/:id/invite', authenticateToken, verifyProjectRole(['owner']), async (req, res) => {
   const projectId = req.params.id;
   const userId = req.user.id;
   const { email, role } = req.body;
@@ -236,16 +196,6 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Validar permisos: solo el 'owner' puede invitar
-    const ownerCheck = await pool.query(
-      `SELECT rol FROM proyecto_usuario WHERE usuario_id = $1 AND proyecto_id = $2;`,
-      [userId, projectId]
-    );
-
-    if (ownerCheck.rows.length === 0 || ownerCheck.rows[0].rol !== 'owner') {
-      return res.status(403).json({ message: 'Acceso denegado. Solo el dueño del proyecto puede realizar invitaciones.' });
-    }
-
     // Buscar el usuario objetivo por correo
     const targetUserResult = await pool.query(
       `SELECT id, name, email FROM users WHERE LOWER(email) = LOWER($1);`,
