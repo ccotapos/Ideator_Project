@@ -7,6 +7,7 @@ import ProjectChatPanel from '../components/ProjectChatPanel.jsx';
 import ReviewDefinitionPage from './ReviewDefinitionPage.jsx';
 import DataModelPage from './DataModelPage.jsx';
 import EndpointSpecPage from './EndpointSpecPage.jsx';
+import ScreenMapPage from './ScreenMapPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -29,6 +30,7 @@ export default function ProjectDetail() {
     if (tab === 'revision') return 'revision';
     if (tab === 'modelo') return 'modelo';
     if (tab === 'endpoints') return 'endpoints';
+    if (tab === 'mockups') return 'mockups';
     return 'resumen';
   });
 
@@ -208,6 +210,13 @@ export default function ProjectDetail() {
         >
           Endpoints (API)
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'mockups' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mockups')}
+        >
+          Mockups
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
@@ -215,6 +224,7 @@ export default function ProjectDetail() {
       {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} />}
       {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}
       {activeTab === 'endpoints' && <EndpointSpecPage projectId={projectId} role={role} />}
+      {activeTab === 'mockups' && <ScreenMapPage projectId={projectId} role={role} />}
     </section>
   );
 }
