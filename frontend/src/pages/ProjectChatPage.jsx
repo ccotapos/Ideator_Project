@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getProjectMessages, sendProjectMessage } from '../api/chat.js';
+import MarkdownMessage from '../components/MarkdownMessage.jsx';
 
 const timeFormatter = new Intl.DateTimeFormat('es-CL', { hour: '2-digit', minute: '2-digit' });
 
@@ -93,7 +94,11 @@ export default function ProjectChatPage() {
             key={message.id}
             className={`chat-bubble ${message.remitente === 'usuario' ? 'chat-bubble-user' : 'chat-bubble-ideator'}`}
           >
-            <p className="chat-bubble-text">{message.contenido}</p>
+            {message.remitente === 'usuario' ? (
+              <p className="chat-bubble-text">{message.contenido}</p>
+            ) : (
+              <MarkdownMessage content={message.contenido} />
+            )}
             <span className="chat-bubble-time">{timeFormatter.format(new Date(message.created_at))}</span>
           </div>
         ))}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getProjectMessages, sendProjectMessage } from '../api/chat.js';
 import { formatTime } from '../utils/date.js';
+import MarkdownMessage from './MarkdownMessage.jsx';
 
 export default function ProjectChatPanel({ projectId }) {
   const { token } = useAuth();
@@ -94,7 +95,11 @@ export default function ProjectChatPanel({ projectId }) {
             key={message.id}
             className={`chat-bubble ${message.remitente === 'usuario' ? 'chat-bubble-user' : 'chat-bubble-ideator'}`}
           >
-            <p className="chat-bubble-text">{message.contenido}</p>
+            {message.remitente === 'usuario' ? (
+              <p className="chat-bubble-text">{message.contenido}</p>
+            ) : (
+              <MarkdownMessage content={message.contenido} />
+            )}
             <span className="chat-bubble-time">{formatTime(message.created_at)}</span>
           </div>
         ))}
