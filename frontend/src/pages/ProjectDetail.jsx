@@ -221,7 +221,7 @@ export default function ProjectDetail() {
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
       {activeTab === 'chat' && <ProjectChatPanel projectId={projectId} />}
-      {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} />}
+      {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} role={role} />}
       {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}
       {activeTab === 'endpoints' && <EndpointSpecPage projectId={projectId} role={role} />}
       {activeTab === 'mockups' && <ScreenMapPage projectId={projectId} role={role} />}

@@ -263,3 +263,25 @@ modelo aprobado y reporta inconsistencias:
 `{ validation: { consistent, issues } }`. La aprobación queda **bloqueada**
 (respuesta `409` con la lista de `issues`) mientras existan inconsistencias, y la
 pantalla "Endpoints (API)" las muestra al usuario antes de continuar.
+
+## Configuración de las funcionalidades de IA
+
+Todas las llamadas a Gemini pasan por `src/config/geminiClient.js`, que aplica
+**timeout**, **reintentos con backoff** en errores transitorios (429 y 5xx) y un
+**modelo de respaldo**:
+
+- **Chat** (`getIdeatorReply`): usa `GEMINI_CHAT_MODEL` (por defecto
+  `gemini-flash-lite-latest`), priorizando velocidad (~1–2 s).
+- **Modelo de datos y especificación de endpoints**: usan
+  `GEMINI_STRUCTURED_MODEL` (por defecto `gemini-3.8-flash`) con el *thinking*
+  desactivado; si el modelo se satura o no responde, se reintenta con
+  `GEMINI_STRUCTURED_FALLBACK_MODEL` (`gemini-flash-lite-latest`).
+
+| Variable | Valor por defecto | Uso |
+| --- | --- | --- |
+| `GEMINI_CHAT_MODEL` | `gemini-flash-lite-latest` | Chat (velocidad) |
+| `GEMINI_STRUCTURED_MODEL` | `gemini-3.8-flash` | Modelo de datos y endpoints (calidad) |
+| `GEMINI_STRUCTURED_FALLBACK_MODEL` | `gemini-flash-lite-latest` | Respaldo si el principal falla |
+
+Los modelos *lite* no aceptan `thinkingConfig`, por lo que el cliente solo lo
+añade en modelos completos. El chat envía como contexto los últimos 10 mensajes.
