@@ -5,6 +5,25 @@ docker compose up
 
 abrir http://localhost:5173/
 
+## Agente de IA en Azure Foundry
+
+El chat del proyecto usa el agente persistente `ideator-deepseek-agent` del
+proyecto Azure Foundry `ideator-galaz`. El backend envia el historial reciente
+y un contexto basado en el enunciado semestral para que el agente detecte
+ambiguedades, preguntas bloqueantes e inconsistencias entre definicion, datos,
+API, pantallas y arquitectura.
+
+La configuracion vive en `ideator_backend/.env`, que esta excluido de Git:
+
+```env
+AI_PROVIDER=foundry
+FOUNDRY_PROJECT_ENDPOINT=https://ideator-galaz-resource.services.ai.azure.com/api/projects/ideator-galaz
+FOUNDRY_AGENT_NAME=ideator-deepseek-agent
+FOUNDRY_API_KEY=clave-del-proyecto
+```
+
+Si `AI_PROVIDER` no es `foundry`, el backend conserva Gemini como alternativa.
+
 ## Integrantes
 
 - Diego Galaz

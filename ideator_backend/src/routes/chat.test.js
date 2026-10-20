@@ -3,7 +3,10 @@ const request = require('supertest');
 const express = require('express');
 
 jest.mock('../config/db', () => ({ query: jest.fn() }));
-jest.mock('../config/gemini', () => ({ getIdeatorReply: jest.fn() }));
+jest.mock('../config/ai', () => ({
+  getIdeatorReply: jest.fn(),
+  getAIProviderName: jest.fn(() => 'Azure AI Foundry'),
+}));
 
 const pool = require('../config/db');
 const chatRoutes = require('./chat');

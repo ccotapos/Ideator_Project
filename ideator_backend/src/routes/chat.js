@@ -1,7 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
-const { getIdeatorReply } = require('../config/gemini');
+const { getIdeatorReply, getAIProviderName } = require('../config/ai');
 const { recordActivity } = require('../services/activity');
 
 const router = express.Router();
@@ -138,7 +138,7 @@ router.post('/:id/messages', authenticateToken, async (req, res) => {
       content: row.contenido,
     }));
 
-    // Llama a Claude con el historial reciente
+    // Llama al proveedor configurado con el historial reciente.
     const ideatorText = await getIdeatorReply(conversationHistory);
 
     // Guarda la respuesta de Ideator
@@ -150,7 +150,11 @@ router.post('/:id/messages', authenticateToken, async (req, res) => {
     );
     const ideatorMessage = ideatorMessageResult.rows[0];
 
-    return res.status(201).json({ userMessage, ideatorMessage });
+    return res.status(201).json({
+      userMessage,
+      ideatorMessage,
+      aiProvider: getAIProviderName(),
+    });
   } catch (error) {
     console.error('Error al procesar el mensaje del chat:', error);
     return res.status(500).json({ message: 'No se pudo obtener respuesta de Ideator. Intenta nuevamente.' });

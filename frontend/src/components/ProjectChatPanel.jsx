@@ -12,6 +12,7 @@ export default function ProjectChatPanel({ projectId }) {
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState('');
+  const [aiProvider, setAiProvider] = useState('');
 
   const scrollRef = useRef(null);
 
@@ -60,8 +61,9 @@ export default function ProjectChatPanel({ projectId }) {
     setIsSending(true);
 
     try {
-      const { userMessage, ideatorMessage } = await sendProjectMessage(projectId, content, token);
+      const { userMessage, ideatorMessage, aiProvider: provider } = await sendProjectMessage(projectId, content, token);
       setMessages((prev) => [...prev.filter((m) => m.id !== tempId), userMessage, ideatorMessage]);
+      setAiProvider(provider || '');
     } catch (err) {
       setSendError(err.message);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -73,6 +75,10 @@ export default function ProjectChatPanel({ projectId }) {
 
   return (
     <div className="chat-page">
+      <div className="chat-agent-status" aria-live="polite">
+        <span className="chat-agent-dot" />
+        Agente Ideator{aiProvider ? ` · ${aiProvider}` : ''}
+      </div>
       <div className="chat-window" ref={scrollRef}>
         {loadingHistory ? <p className="chat-status">Cargando conversación…</p> : null}
         {loadError ? <p className="form-error" role="alert">{loadError}</p> : null}
