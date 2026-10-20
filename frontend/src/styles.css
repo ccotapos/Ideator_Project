@@ -244,6 +244,44 @@ button:disabled { cursor: wait; opacity: 0.6; }
   .endpoint-table { display: block; overflow-x: auto; }
 }
 
+/* --- Revisión y edición de la definición inicial --- */
+.definition-page { display: grid; gap: 20px; }
+.definition-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.definition-header h2 { margin: 0; }
+.definition-header p { margin: 4px 0 0; color: #667085; }
+.definition-form { display: grid; gap: 20px; }
+.definition-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.definition-card { padding: 18px; border: 1px solid #d8dee8; border-radius: 10px; background: #fff; }
+.definition-card h3 { margin: 0 0 10px; color: #243b53; font-size: 1rem; }
+.definition-card p { margin: 0; color: #475467; white-space: pre-line; }
+.definition-card ul, .definition-card ol { margin: 0; padding-left: 20px; color: #475467; }
+.definition-card li { margin: 4px 0; }
+.definition-card-wide { grid-column: 1 / -1; }
+.definition-empty { color: #98a2b3; font-style: italic; }
+.definition-field { display: grid; gap: 6px; }
+.definition-field label { font-weight: 700; color: #243b53; }
+.definition-hint { margin: 0; color: #667085; font-size: 0.85rem; }
+.definition-field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d0d5dd; border-radius: 8px; font: inherit; resize: vertical; }
+.definition-field textarea:focus { outline: none; border-color: #2364aa; box-shadow: 0 0 0 3px rgba(35, 100, 170, 0.15); }
+.definition-field textarea.invalid { border-color: #b42318; }
+.definition-list { display: grid; gap: 8px; padding: 16px; border: 1px solid #d8dee8; border-radius: 10px; background: #fff; }
+.definition-list-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.definition-list-header h3 { margin: 0; color: #243b53; font-size: 1rem; }
+.definition-add { padding: 6px 10px; }
+.definition-list-row { display: flex; align-items: center; gap: 8px; }
+.definition-list-row input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid #d0d5dd; border-radius: 8px; font: inherit; }
+.definition-list-row input:focus { outline: none; border-color: #2364aa; box-shadow: 0 0 0 3px rgba(35, 100, 170, 0.15); }
+.definition-order { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #eaf2fb; color: #2364aa; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+.definition-list-moves { display: flex; gap: 4px; }
+.definition-list-moves button { border: 1px solid #d0d5dd; background: #fff; border-radius: 6px; cursor: pointer; padding: 2px 6px; }
+.definition-list-moves button:disabled { opacity: 0.4; cursor: default; }
+.definition-actions { display: flex; gap: 10px; }
+
+@media (max-width: 640px) {
+  .definition-header { flex-direction: column; }
+  .definition-list-row { flex-wrap: wrap; }
+}
+
 /* --- Autenticación (login / registro) --- */
 
 .auth-section {

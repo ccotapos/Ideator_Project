@@ -1,4 +1,9 @@
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const { generateContent, buildGenerationConfig } = require('../config/geminiClient');
+
+// La generación estructurada prioriza calidad: modelo completo con thinking
+// apagado y un modelo "lite" como respaldo si el principal se satura.
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
 
 function validateGeneratedModel(model) {
   if (!model || !Array.isArray(model.entities) || model.entities.length < 2) {
@@ -24,38 +29,40 @@ function validateGeneratedModel(model) {
 }
 
 async function generateDataModel(definition) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY no está configurada.');
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: `Diseña el modelo físico PostgreSQL coherente con esta definición:\n${JSON.stringify(definition)}` }] }],
-      systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Usa nombres claros en snake_case, tipos PostgreSQL, llaves primarias y foráneas.' }] },
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          required: ['entities', 'relationships'],
-          properties: {
-            entities: { type: 'ARRAY', items: { type: 'OBJECT', required: ['name', 'attributes'], properties: {
-              name: { type: 'STRING' }, description: { type: 'STRING' }, attributes: { type: 'ARRAY', items: {
-                type: 'OBJECT', required: ['name', 'type', 'primaryKey', 'nullable'], properties: {
-                  name: { type: 'STRING' }, type: { type: 'STRING' }, primaryKey: { type: 'BOOLEAN' }, nullable: { type: 'BOOLEAN' }
-                }
-              } }
-            } } },
-            relationships: { type: 'ARRAY', items: { type: 'OBJECT', required: ['name', 'fromEntity', 'toEntity', 'fromCardinality', 'toCardinality'], properties: {
-              name: { type: 'STRING' }, fromEntity: { type: 'STRING' }, toEntity: { type: 'STRING' }, fromCardinality: { type: 'STRING' }, toCardinality: { type: 'STRING' }
-            } } }
-          }
+  const buildBody = (model) => ({
+    contents: [{ role: 'user', parts: [{ text: `Diseña el modelo físico PostgreSQL coherente con esta definición:\n${JSON.stringify(definition)}` }] }],
+    systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Usa nombres claros en snake_case, tipos PostgreSQL, llaves primarias y foráneas.' }] },
+    generationConfig: buildGenerationConfig({
+      model,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        required: ['entities', 'relationships'],
+        properties: {
+          entities: { type: 'ARRAY', items: { type: 'OBJECT', required: ['name', 'attributes'], properties: {
+            name: { type: 'STRING' }, description: { type: 'STRING' }, attributes: { type: 'ARRAY', items: {
+              type: 'OBJECT', required: ['name', 'type', 'primaryKey', 'nullable'], properties: {
+                name: { type: 'STRING' }, type: { type: 'STRING' }, primaryKey: { type: 'BOOLEAN' }, nullable: { type: 'BOOLEAN' }
+              }
+            } }
+          } } },
+          relationships: { type: 'ARRAY', items: { type: 'OBJECT', required: ['name', 'fromEntity', 'toEntity', 'fromCardinality', 'toCardinality'], properties: {
+            name: { type: 'STRING' }, fromEntity: { type: 'STRING' }, toEntity: { type: 'STRING' }, fromCardinality: { type: 'STRING' }, toCardinality: { type: 'STRING' }
+          } } }
         }
-      }
-    })
+      },
+    }),
   });
-  if (!response.ok) throw new Error('No se pudo generar el modelo con Gemini.');
-  const data = await response.json();
+
+  const data = await generateContent({
+    model: MODEL,
+    body: buildBody(MODEL),
+    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 30000, retries: 1 },
+    timeoutMs: 20000,
+    retries: 1,
+  });
+
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   return validateGeneratedModel(JSON.parse(text));
 }

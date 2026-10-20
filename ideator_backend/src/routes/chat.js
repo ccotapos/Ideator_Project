@@ -6,7 +6,7 @@ const { recordActivity } = require('../services/activity');
 
 const router = express.Router();
 
-const HISTORY_LIMIT = 20; // últimos mensajes que se envían como contexto a la IA
+const HISTORY_LIMIT = 10; // últimos mensajes que se envían como contexto a la IA
 
 // Verifica que el usuario pertenezca al proyecto; retorna su rol o null.
 async function getMembership(userId, projectId) {
