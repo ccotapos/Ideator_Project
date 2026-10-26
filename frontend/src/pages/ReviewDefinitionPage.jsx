@@ -9,13 +9,62 @@ import {
 } from '../api/definition.js';
 import { getProject } from '../api/projects.js';
 
+// Las 5 arquitecturas estándar disponibles para comparar y seleccionar
+const ARCHITECTURES = [
+  {
+    id: 'node-react-pg',
+    name: 'Monolito Modular (Node.js + React + PostgreSQL)',
+    frontend: 'React (Vite) + Tailwind CSS',
+    backend: 'Node.js con Express',
+    database: 'PostgreSQL Relacional',
+    infrastructure: 'Render / Railway / Vercel',
+    description: 'Ideal para aplicaciones web estándar con alta escalabilidad y un ecosistema de JavaScript unificado.',
+  },
+  {
+    id: 'fastapi-react-pg',
+    name: 'API First (Python FastAPI + React + PostgreSQL)',
+    frontend: 'React (Vite)',
+    backend: 'Python con FastAPI (Alto rendimiento asíncrono)',
+    database: 'PostgreSQL Relacional',
+    infrastructure: 'Render / AWS / Docker',
+    description: 'Excelente para proyectos con procesamiento de datos intensivo, IA o APIs de alta velocidad.',
+  },
+  {
+    id: 'nextjs-fullstack',
+    name: 'Fullstack Jamstack (Next.js + Vercel + PostgreSQL)',
+    frontend: 'Next.js (React Server Components)',
+    backend: 'Next.js API Routes / Server Actions',
+    database: 'PostgreSQL (Supabase o Neon)',
+    infrastructure: 'Vercel / Netlify',
+    description: 'Desarrollo rápido, excelente SEO y despliegue unificado en una sola plataforma.',
+  },
+  {
+    id: 'python-flask-sqlite',
+    name: 'Ligero / Prototipo (Python Flask + HTML/JS + SQLite)',
+    frontend: 'HTML5, CSS y Vanilla JavaScript',
+    backend: 'Python con Flask',
+    database: 'SQLite (Archivo local)',
+    infrastructure: 'PythonAnywhere / VPS básico',
+    description: 'Perfecto para MVPs rápidos, prototipos académicos o despliegues con recursos muy limitados.',
+  },
+  {
+    id: 'docker-microservices',
+    name: 'Contenedorizado (Node/Python + Docker + PostgreSQL)',
+    frontend: 'React (Vite)',
+    backend: 'Node.js / Express o FastAPI',
+    database: 'PostgreSQL en Contenedor Docker',
+    infrastructure: 'Docker Desktop / AWS ECS / DigitalOcean',
+    description: 'Enfocado en aislamiento de servicios, entornos idénticos de desarrollo y producción mediante Docker y WSL2.',
+  },
+];
+
 const SECTION_META = [
   { key: 'problem', field: 'problem', label: 'Problema' },
   { key: 'context', field: 'context', label: 'Contexto' },
   { key: 'target_users', field: 'targetUsers', label: 'Usuarios objetivo' },
 ];
 
-function toForm(definition) {
+function toForm(definition, architecture) {
   const sections = definition?.sections || {};
   const mvp = definition?.mvp || {};
   const list = (items) => (Array.isArray(items) && items.length > 0 ? [...items] : ['']);
@@ -27,6 +76,7 @@ function toForm(definition) {
     inScope: list(mvp.inScope),
     outOfScope: list(mvp.outOfScope),
     journey: list(mvp.journey),
+    selectedArchitecture: architecture?.selectedOption || '',
   };
 }
 
@@ -93,11 +143,12 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
   const { token } = useAuth();
 
   const [definition, setDefinition] = useState(null);
+  const [architecture, setArchitecture] = useState(null);
   const [questions, setQuestions] = useState({});
   const [role, setRole] = useState(roleProp || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState(toForm(null));
+  const [form, setForm] = useState(toForm(null, null));
   const [fieldErrors, setFieldErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -111,15 +162,19 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
     setError('');
 
     try {
-      const [definitionData, questionsData, projectData] = await Promise.all([
+      const [definitionData, questionsData, projectData, archRes] = await Promise.all([
         getDefinition(projectId, token),
         getDefinitionQuestions(projectId, token),
         roleProp ? Promise.resolve({ role: roleProp }) : getProject(projectId, token),
+        fetch(`/api/projects/${projectId}/architecture`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.ok ? res.json() : { architecture: null }).catch(() => ({ architecture: null }))
       ]);
 
       setDefinition(definitionData.definition || {});
+      setArchitecture(archRes.architecture || null);
       setQuestions(questionsData.questions || {});
-      setForm(toForm(definitionData.definition));
+      setForm(toForm(definitionData.definition, archRes.architecture));
       setRole(projectData.role || null);
     } catch (err) {
       setError(err.message);
@@ -145,7 +200,7 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
   };
 
   const handleEdit = () => {
-    setForm(toForm(definition));
+    setForm(toForm(definition, architecture));
     setFieldErrors({});
     setSaveError('');
     setSuccess('');
@@ -153,7 +208,7 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
   };
 
   const handleCancel = () => {
-    setForm(toForm(definition));
+    setForm(toForm(definition, architecture));
     setFieldErrors({});
     setSaveError('');
     setIsEditing(false);
@@ -168,6 +223,7 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
     if (!form.problem.trim()) errors.problem = 'El problema es obligatorio.';
     if (!form.context.trim()) errors.context = 'El contexto es obligatorio.';
     if (!form.targetUsers.trim()) errors.targetUsers = 'Los usuarios objetivo son obligatorios.';
+    if (!form.selectedArchitecture) errors.architecture = 'Debes seleccionar una arquitectura.';
 
     const inScope = form.inScope.map((item) => item.trim()).filter(Boolean);
     const outOfScope = form.outOfScope.map((item) => item.trim()).filter(Boolean);
@@ -182,6 +238,7 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
 
     setIsSaving(true);
     try {
+      // 1. Guardar secciones y MVP
       await saveDefinitionSections(
         projectId,
         {
@@ -192,9 +249,28 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
         token
       );
       await saveDefinitionMvp(projectId, { inScope, outOfScope, journey }, token);
+
+      // 2. Guardar la arquitectura seleccionada
+      const chosenArch = ARCHITECTURES.find(a => a.id === form.selectedArchitecture);
+      await fetch(`/api/projects/${projectId}/architecture`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          selectedOption: chosenArch.id,
+          name: chosenArch.name,
+          frontend: chosenArch.frontend,
+          backend: chosenArch.backend,
+          database: chosenArch.database,
+          infrastructure: chosenArch.infrastructure
+        })
+      });
+
       await load(false);
       setIsEditing(false);
-      setSuccess('Definición actualizada correctamente.');
+      setSuccess('Definición y arquitectura actualizadas correctamente.');
     } catch (err) {
       setSaveError(err.message);
     } finally {
@@ -212,8 +288,8 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
     <div className="definition-page">
       <div className="definition-header">
         <div>
-          <h2>Revisión de la Definición Inicial</h2>
-          <p>Verifica y actualiza los datos estructurados del proyecto antes de avanzar.</p>
+          <h2>Revisión de la Definición Inicial y Arquitectura</h2>
+          <p>Verifica y actualiza los datos estructurados y la arquitectura de tu proyecto antes de avanzar.</p>
         </div>
         {canEdit && !isEditing ? (
           <button type="button" className="btn-primary" onClick={handleEdit}>
@@ -248,6 +324,47 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
                 ) : null}
               </div>
             ))}
+
+            {/* Selector de Arquitectura en Modo Edición */}
+            <div className="definition-field mt-6">
+              <label className="block font-semibold mb-2">Selección de Arquitectura del Proyecto</label>
+              <p className="text-sm text-gray-600 mb-4">Compara las 5 opciones estándar y selecciona una:</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ARCHITECTURES.map((arch) => {
+                  const isSelected = form.selectedArchitecture === arch.id;
+                  return (
+                    <div
+                      key={arch.id}
+                      onClick={() => setForm(prev => ({ ...prev, selectedArchitecture: arch.id }))}
+                      className={`cursor-pointer rounded-lg p-4 border-2 transition-all flex flex-col justify-between ${
+                        isSelected ? 'border-blue-600 bg-blue-50/40 shadow-md' : 'border-gray-200 bg-white'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-gray-900">{arch.name}</h4>
+                          <input
+                            type="radio"
+                            name="selectedArchitecture"
+                            checked={isSelected}
+                            onChange={() => setForm(prev => ({ ...prev, selectedArchitecture: arch.id }))}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-600 mb-3">{arch.description}</p>
+                      </div>
+                      <div className="space-y-1 text-xs text-gray-700 bg-gray-50 p-2 rounded border">
+                        <div><strong>FE:</strong> {arch.frontend}</div>
+                        <div><strong>BE:</strong> {arch.backend}</div>
+                        <div><strong>BD:</strong> {arch.database}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {fieldErrors.architecture ? <p className="field-error mt-2" role="alert">{fieldErrors.architecture}</p> : null}
+            </div>
 
             <EditableList
               label="MVP · Dentro del alcance"
@@ -296,7 +413,23 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
               ))}
             </div>
 
-            <div className="definition-grid">
+            {/* Vista de Arquitectura Seleccionada */}
+            <article className="definition-card definition-card-wide mt-4">
+              <h3>Arquitectura Seleccionada</h3>
+              {architecture ? (
+                <div className="text-sm text-gray-700 space-y-1 mt-2">
+                  <p><strong>Stack:</strong> {architecture.name}</p>
+                  <p><strong>Frontend:</strong> {architecture.frontend}</p>
+                  <p><strong>Backend:</strong> {architecture.backend}</p>
+                  <p><strong>Base de Datos:</strong> {architecture.database}</p>
+                  <p><strong>Infraestructura:</strong> {architecture.infrastructure}</p>
+                </div>
+              ) : (
+                <p className="definition-empty">⚠️ Arquitectura pendiente de seleccionar.</p>
+              )}
+            </article>
+
+            <div className="definition-grid mt-4">
               <article className="definition-card">
                 <h3>MVP · Dentro del alcance</h3>
                 {mvp.inScope?.length ? (
@@ -315,7 +448,7 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
               </article>
             </div>
 
-            <article className="definition-card definition-card-wide">
+            <article className="definition-card definition-card-wide mt-4">
               <h3>Recorrido principal</h3>
               {mvp.journey?.length ? (
                 <ol>{mvp.journey.map((item, index) => <li key={index}>{item}</li>)}</ol>

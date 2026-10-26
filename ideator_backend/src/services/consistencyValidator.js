@@ -64,4 +64,64 @@ function validateSpecConsistency(spec, model) {
   return { consistent: issues.length === 0, issues };
 }
 
-module.exports = { validateSpecConsistency };
+/**
+ * Nueva función orquestadora: Valida la consistencia global del proyecto completo 
+ * (Arquitectura, Modelo de Datos, Endpoints/Spec y Pantallas) antes de la generación final.
+ */
+function validateProjectConsistency(projectData) {
+  const errors = [];
+  const warnings = [];
+
+  if (!projectData) {
+    return { valid: false, errors: ["No se encontraron datos del proyecto."], warnings };
+  }
+
+  const { architecture, dataModel, endpoints, spec, screens } = projectData;
+
+  // 1. Verificar selección de Arquitectura
+  if (!architecture || !architecture.selectedOption) {
+    errors.push({
+      code: 'arquitectura_faltante',
+      message: "Falta seleccionar la arquitectura base del proyecto en la etapa correspondiente."
+    });
+  }
+
+  // 2. Verificar Modelo de Datos
+  if (!dataModel || !Array.isArray(dataModel.entities) || dataModel.entities.length === 0) {
+    errors.push({
+      code: 'modelo_vacio',
+      message: "El modelo de datos está vacío o no contiene entidades definidas."
+    });
+  }
+
+  // 3. Integrar la validación existente de endpoints (spec vs model)
+  const effectiveSpec = spec || { endpoints: endpoints || [] };
+  const effectiveModel = dataModel || { entities: [] };
+  
+  const specValidation = validateSpecConsistency(effectiveSpec, effectiveModel);
+  if (!specValidation.consistent) {
+    // Convertimos los issues del validador de spec en errores para el motor global
+    specValidation.issues.forEach(issue => {
+      errors.push(issue);
+    });
+  }
+
+  // 4. Verificar Mapa de Pantallas (Frontend)
+  if (!screens || !Array.isArray(screens.views) || screens.views.length === 0) {
+    warnings.push({
+      code: 'pantallas_vacias',
+      message: "El mapa de pantallas del frontend no ha sido definido o está vacío."
+    });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+module.exports = { 
+  validateSpecConsistency, 
+  validateProjectConsistency 
+};
