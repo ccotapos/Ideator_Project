@@ -321,6 +321,36 @@ button:disabled { cursor: wait; opacity: 0.6; }
   .architecture-actions { width: 100%; }
 }
 
+/* --- Documentos finales y contradicciones --- */
+.final-docs-page { display: grid; gap: 20px; }
+.final-docs-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.final-docs-header h3 { margin: 0; }
+.final-docs-header p { margin: 4px 0 0; color: #667085; }
+.final-docs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.contradiction-report { padding: 18px; border: 1px solid #f5c2c0; border-left: 4px solid #b42318; border-radius: 10px; background: #fef3f2; }
+.contradiction-report h4 { margin: 0 0 6px; color: #7a271a; }
+.contradiction-report > p { margin: 0 0 12px; color: #7a271a; }
+.contradiction-report ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.contradiction-report li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid #f5c2c0; border-radius: 8px; background: #fff; }
+.contradiction-report li strong { display: block; color: #7a271a; }
+.contradiction-stages, .contradiction-reference { display: block; margin-top: 4px; color: #667085; font-size: 0.82rem; }
+.contradiction-ok { margin: 0; padding: 12px 14px; border-left: 4px solid #13795b; background: #e7f5ef; color: #0f5132; }
+.final-docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.final-doc-card { display: grid; gap: 12px; padding: 18px; border: 1px solid #d8dee8; border-radius: 10px; background: #fff; }
+.final-doc-card header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.final-doc-card h4 { margin: 0; color: #243b53; }
+.final-doc-preview { max-height: 480px; overflow: auto; padding: 4px 8px; border: 1px solid #eaecf0; border-radius: 8px; background: #fcfcfd; }
+.final-doc-preview h1, .final-doc-preview h2, .final-doc-preview h3 { color: #243b53; }
+.final-doc-preview p, .final-doc-preview li { color: #475467; }
+.final-doc-preview code { font-family: ui-monospace, monospace; }
+.final-doc-preview pre { padding: 10px; overflow: auto; background: #f4f6f9; border-radius: 6px; }
+
+@media (max-width: 640px) {
+  .final-docs-header { flex-direction: column; }
+  .final-docs-actions { width: 100%; }
+  .contradiction-report li { flex-direction: column; }
+}
+
 /* --- Autenticación (login / registro) --- */
 
 .auth-section {

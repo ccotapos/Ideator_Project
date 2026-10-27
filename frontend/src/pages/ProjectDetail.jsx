@@ -9,6 +9,7 @@ import DataModelPage from './DataModelPage.jsx';
 import EndpointSpecPage from './EndpointSpecPage.jsx';
 import ScreenMapPage from './ScreenMapPage.jsx';
 import ArchitecturePage from './ArchitecturePage.jsx';
+import FinalDocumentsPage from './FinalDocumentsPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -33,6 +34,7 @@ export default function ProjectDetail() {
     if (tab === 'endpoints') return 'endpoints';
     if (tab === 'mockups') return 'mockups';
     if (tab === 'arquitectura') return 'arquitectura';
+    if (tab === 'documentos') return 'documentos';
     return 'resumen';
   });
 
@@ -226,6 +228,13 @@ export default function ProjectDetail() {
         >
           Arquitectura
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'documentos' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documentos')}
+        >
+          Documentos finales
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
@@ -235,6 +244,9 @@ export default function ProjectDetail() {
       {activeTab === 'endpoints' && <EndpointSpecPage projectId={projectId} role={role} />}
       {activeTab === 'mockups' && <ScreenMapPage projectId={projectId} role={role} />}
       {activeTab === 'arquitectura' && <ArchitecturePage projectId={projectId} role={role} />}
+      {activeTab === 'documentos' && (
+        <FinalDocumentsPage projectId={projectId} role={role} onNavigateStage={setActiveTab} />
+      )}
     </section>
   );
 }
