@@ -8,6 +8,7 @@ import ReviewDefinitionPage from './ReviewDefinitionPage.jsx';
 import DataModelPage from './DataModelPage.jsx';
 import EndpointSpecPage from './EndpointSpecPage.jsx';
 import ScreenMapPage from './ScreenMapPage.jsx';
+import ArchitecturePage from './ArchitecturePage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
 
@@ -31,6 +32,7 @@ export default function ProjectDetail() {
     if (tab === 'modelo') return 'modelo';
     if (tab === 'endpoints') return 'endpoints';
     if (tab === 'mockups') return 'mockups';
+    if (tab === 'arquitectura') return 'arquitectura';
     return 'resumen';
   });
 
@@ -217,6 +219,13 @@ export default function ProjectDetail() {
         >
           Mockups
         </button>
+        <button
+          type="button"
+          className={`project-detail-tab ${activeTab === 'arquitectura' ? 'active' : ''}`}
+          onClick={() => setActiveTab('arquitectura')}
+        >
+          Arquitectura
+        </button>
       </div>
 
       {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
@@ -225,6 +234,7 @@ export default function ProjectDetail() {
       {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}
       {activeTab === 'endpoints' && <EndpointSpecPage projectId={projectId} role={role} />}
       {activeTab === 'mockups' && <ScreenMapPage projectId={projectId} role={role} />}
+      {activeTab === 'arquitectura' && <ArchitecturePage projectId={projectId} role={role} />}
     </section>
   );
 }

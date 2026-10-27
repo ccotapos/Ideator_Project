@@ -157,7 +157,9 @@ router.post('/:id/messages', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error al procesar el mensaje del chat:', error);
-    return res.status(500).json({ message: 'No se pudo obtener respuesta de Ideator. Intenta nuevamente.' });
+    return res.status(500).json({
+      message: `No se pudo obtener respuesta de Ideator: ${error.message}`,
+    });
   }
 });
 

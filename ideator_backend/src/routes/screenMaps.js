@@ -40,13 +40,12 @@ router.post('/:id/screen-map/generate', authenticateToken, async (req, res) => {
   if (!['owner', 'editor'].includes(role)) return res.status(403).json({ message: 'No tienes permisos para generar mockups.' });
   const client = await pool.connect();
   try {
-    const [sections, features, journey, endpoints, members] = await Promise.all([
-      client.query('SELECT seccion, respuesta FROM definicion_secciones WHERE proyecto_id = $1;', [req.params.id]),
-      client.query("SELECT alcance, descripcion FROM mvp_funcionalidades WHERE proyecto_id = $1 ORDER BY alcance, posicion;", [req.params.id]),
-      client.query('SELECT descripcion FROM recorrido_principal WHERE proyecto_id = $1 ORDER BY posicion;', [req.params.id]),
-      client.query(`SELECT e.metodo, e.ruta, e.operacion FROM endpoints e JOIN especificaciones_endpoints s ON s.id = e.especificacion_id WHERE s.proyecto_id = $1 ORDER BY e.posicion;`, [req.params.id]),
-      client.query('SELECT DISTINCT rol FROM proyecto_usuario WHERE proyecto_id = $1;', [req.params.id]),
-    ]);
+    // Lecturas secuenciales sobre el mismo cliente (evita consultas concurrentes).
+    const sections = await client.query('SELECT seccion, respuesta FROM definicion_secciones WHERE proyecto_id = $1;', [req.params.id]);
+    const features = await client.query("SELECT alcance, descripcion FROM mvp_funcionalidades WHERE proyecto_id = $1 ORDER BY alcance, posicion;", [req.params.id]);
+    const journey = await client.query('SELECT descripcion FROM recorrido_principal WHERE proyecto_id = $1 ORDER BY posicion;', [req.params.id]);
+    const endpoints = await client.query(`SELECT e.metodo, e.ruta, e.operacion FROM endpoints e JOIN especificaciones_endpoints s ON s.id = e.especificacion_id WHERE s.proyecto_id = $1 ORDER BY e.posicion;`, [req.params.id]);
+    const members = await client.query('SELECT DISTINCT rol FROM proyecto_usuario WHERE proyecto_id = $1;', [req.params.id]);
     const generated = await generateScreenMap({ definition: sections.rows, features: features.rows, journey: journey.rows, endpoints: endpoints.rows, projectRoles: members.rows.map((item) => item.rol) });
     await client.query('BEGIN');
     await client.query('DELETE FROM mapas_pantallas WHERE proyecto_id = $1;', [req.params.id]);

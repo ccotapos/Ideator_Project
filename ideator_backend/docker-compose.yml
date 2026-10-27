@@ -60,6 +60,8 @@ services:
       # Dentro de la red de docker-compose, el backend se llama "backend",
       # no "localhost".
       - VITE_PROXY_TARGET=http://backend:3000
+      # Evita que pnpm aborte la instalación de dependencias por falta de TTY.
+      - CI=true
     volumes:
       - ../frontend:/usr/src/app
       - /usr/src/app/node_modules
