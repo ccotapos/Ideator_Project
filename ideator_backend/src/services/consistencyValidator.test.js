@@ -1,4 +1,4 @@
-const { validateSpecConsistency } = require('./consistencyValidator');
+const { validateSpecConsistency, validateProjectConsistency } = require('./consistencyValidator');
 
 const model = {
   entities: [
@@ -41,5 +41,38 @@ describe('Validación de consistencia API ↔ modelo de datos', () => {
         expect.objectContaining({ code: 'entidad_faltante', ruta: '/api/salud' }),
       ])
     );
+  });
+});
+
+describe('Motor de Validación Global del Proyecto (validateProjectConsistency)', () => {
+  test('debe bloquear si falta la arquitectura o el modelo de datos', () => {
+    const incompleteProject = {
+      architecture: null,
+      dataModel: null,
+      screens: { views: [] }
+    };
+
+    const result = validateProjectConsistency(incompleteProject);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  test('debe aprobar un proyecto completo y consistente', () => {
+    const validProject = {
+      architecture: { selectedOption: 'Node.js + React + PostgreSQL' },
+      dataModel: model,
+      spec: {
+        endpoints: [
+          { metodo: 'GET', ruta: '/api/proyectos', entidad: 'proyectos', atributos: ['id'] }
+        ]
+      },
+      screens: {
+        views: [{ name: 'ProjectDashboard' }]
+      }
+    };
+
+    const result = validateProjectConsistency(validProject);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
   });
 });

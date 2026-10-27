@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
 const { recordActivity } = require('../services/activity');
+const { validateProjectConsistency } = require('../services/consistencyValidator');
 
 const router = express.Router();
 
@@ -234,6 +235,64 @@ router.get('/:id/definition', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error al obtener definición:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+});
+
+// GET /api/projects/:id/definition/validate - Valida la consistencia global del proyecto antes de la generación
+router.get('/:id/definition/validate', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+
+  try {
+    const role = await getMembership(req.user.id, projectId);
+    if (!role) {
+      return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
+    }
+
+    const [sectionsResult, featuresResult, journeyResult, modelsResult, endpointsResult, screensResult, architectureResult] = await Promise.all([
+      pool.query(`SELECT seccion, respuesta FROM definicion_secciones WHERE proyecto_id = $1;`, [projectId]),
+      pool.query(`SELECT alcance, descripcion FROM mvp_funcionalidades WHERE proyecto_id = $1;`, [projectId]),
+      pool.query(`SELECT descripcion FROM recorrido_principal WHERE proyecto_id = $1;`, [projectId]),
+      pool.query(`SELECT * FROM modelo_datos WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
+      pool.query(`SELECT * FROM endpoints_spec WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
+      pool.query(`SELECT * FROM pantallas_mapa WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
+      pool.query(`SELECT * FROM arquitectura_proyecto WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
+    ]);
+
+    const projectData = {
+      architecture: architectureResult.rows[0] || null,
+      dataModel: { entities: modelsResult.rows },
+      spec: { endpoints: endpointsResult.rows },
+      screens: { views: screensResult.rows },
+      definition: {
+        sections: sectionsResult.rows,
+        mvp: {
+          inScope: featuresResult.rows.filter(r => r.alcance === 'in').map(r => r.descripcion),
+          outOfScope: featuresResult.rows.filter(r => r.alcance === 'out').map(r => r.descripcion),
+          journey: journeyResult.rows.map(r => r.descripcion)
+        }
+      }
+    };
+
+    const validation = validateProjectConsistency(projectData);
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se encontraron inconsistencias entre las etapas del proyecto.',
+        errors: validation.errors,
+        warnings: validation.warnings
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'El proyecto es consistente y está listo para la generación.',
+      warnings: validation.warnings
+    });
+
+  } catch (error) {
+    console.error('Error al validar la consistencia del proyecto:', error);
     return res.status(500).json({ message: 'Error interno del servidor.' });
   }
 });
