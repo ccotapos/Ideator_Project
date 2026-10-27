@@ -304,3 +304,28 @@ Todas las llamadas a Gemini pasan por `src/config/geminiClient.js`, que aplica
 
 Los modelos *lite* no aceptan `thinkingConfig`, por lo que el cliente solo lo
 añade en modelos completos. El chat envía como contexto los últimos 10 mensajes.
+
+## Recomendación de arquitectura
+
+La migración `014_create_architecture.sql` agrega la tabla `arquitecturas`, que
+guarda la recomendación por proyecto (escenario, justificación, tecnologías,
+operación, alternativas y estado `draft`/`approved`).
+
+Ideator recomienda una de las **cinco arquitecturas base** documentadas en
+[`docs/arquitecturas.md`](docs/arquitecturas.md), considerando la definición, el
+modelo de datos aprobado, la especificación de endpoints y el mapa de pantallas:
+
+```http
+GET  /api/projects/{id}/architecture
+POST /api/projects/{id}/architecture/recommend
+POST /api/projects/{id}/architecture/approve
+```
+
+La recomendación incluye una **justificación** que explica por qué la arquitectura
+es apropiada (no solo nombres de tecnologías), las tecnologías por capa y los
+aspectos operacionales (Docker, variables de entorno y observabilidad). La
+generación exige que las etapas previas estén completas y la aprobación queda
+reservada al `owner`.
+
+El escenario **orientado a eventos** es el quinto escenario, agregado con el mismo
+nivel de detalle que los cuatro iniciales.

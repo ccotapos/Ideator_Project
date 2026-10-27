@@ -282,6 +282,40 @@ button:disabled { cursor: wait; opacity: 0.6; }
   .definition-list-row { flex-wrap: wrap; }
 }
 
+/* --- Arquitectura recomendada --- */
+.architecture-page { display: grid; gap: 20px; }
+.architecture-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.architecture-header h3 { margin: 0; }
+.architecture-header p { margin: 4px 0 0; color: #667085; }
+.architecture-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.architecture-summary { display: flex; align-items: center; gap: 12px; }
+.architecture-summary h4 { margin: 0; font-size: 1.3rem; color: #243b53; }
+.architecture-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #eaf2fb; color: #2364aa; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.architecture-badge.approved { background: #e7f5ef; color: #13795b; }
+.architecture-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.architecture-card { padding: 18px; border: 1px solid #d8dee8; border-radius: 10px; background: #fff; }
+.architecture-card h4 { margin: 0 0 10px; color: #243b53; }
+.architecture-card p { margin: 0; color: #475467; white-space: pre-line; }
+.architecture-card ul { margin: 0; padding-left: 20px; color: #475467; }
+.architecture-card li { margin: 5px 0; }
+.architecture-rationale { border-left: 4px solid #2364aa; background: #f7fafd; }
+.architecture-label { display: block; margin-bottom: 6px; color: #667085; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.architecture-ops { margin: 0; display: grid; gap: 10px; }
+.architecture-ops div { display: grid; gap: 2px; }
+.architecture-ops dt { color: #243b53; font-weight: 700; font-size: 0.85rem; }
+.architecture-ops dd { margin: 0; color: #475467; }
+.architecture-catalog { padding-top: 8px; border-top: 1px solid #d8dee8; }
+.architecture-catalog h4 { margin: 0 0 10px; }
+.architecture-catalog ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.architecture-catalog li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid #eaecf0; border-radius: 8px; background: #fff; }
+.architecture-catalog li.active { border-color: #2364aa; box-shadow: 0 0 0 2px rgba(35, 100, 170, 0.15); }
+.architecture-catalog li span { color: #667085; font-size: 0.88rem; }
+
+@media (max-width: 640px) {
+  .architecture-header { flex-direction: column; }
+  .architecture-actions { width: 100%; }
+}
+
 /* --- Autenticación (login / registro) --- */
 
 .auth-section {

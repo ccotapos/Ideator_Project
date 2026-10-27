@@ -9,7 +9,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch(path, { method = 'GET', body, token } = {}) {
+export async function apiFetch(path, { method = 'GET', body, token, timeoutMs } = {}) {
   let response;
 
   try {
@@ -20,8 +20,12 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
+      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
     });
   } catch (networkError) {
+    if (networkError.name === 'TimeoutError') {
+      throw new ApiError('La operación tardó demasiado. Intenta nuevamente.', 0);
+    }
     throw new ApiError(
       'No se pudo contactar al servidor. Verifica tu conexión o que el backend esté disponible.',
       0

@@ -3,7 +3,15 @@ const foundry = require('./foundry');
 
 function getProvider() {
   const requestedProvider = (process.env.AI_PROVIDER || '').toLowerCase();
-  if (requestedProvider === 'foundry' || (!requestedProvider && process.env.FOUNDRY_API_KEY)) {
+  const hasFoundryKey = Boolean(process.env.FOUNDRY_API_KEY);
+
+  if (requestedProvider === 'foundry') {
+    if (!hasFoundryKey) {
+      console.warn('AI_PROVIDER=foundry pero FOUNDRY_API_KEY no está configurada; se usará Gemini.');
+    } else {
+      return { name: 'Azure AI Foundry', getIdeatorReply: foundry.getIdeatorReply };
+    }
+  } else if (!requestedProvider && hasFoundryKey) {
     return { name: 'Azure AI Foundry', getIdeatorReply: foundry.getIdeatorReply };
   }
 

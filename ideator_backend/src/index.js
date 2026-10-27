@@ -9,6 +9,7 @@ const definitionRoutes = require('./routes/definition');
 const dataModelRoutes = require('./routes/dataModels');
 const endpointSpecRoutes = require('./routes/endpointSpec');
 const screenMapRoutes = require('./routes/screenMaps');
+const architectureRoutes = require('./routes/architectures');
 const { runMigrations } = require('./db/migrate');
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/projects', definitionRoutes);
 app.use('/api/projects', dataModelRoutes);
 app.use('/api/projects', endpointSpecRoutes);
 app.use('/api/projects', screenMapRoutes);
+app.use('/api/projects', architectureRoutes);
 
 // Endpoint para comprobación de estado e integridad de la BD
 app.get('/health', async (req, res) => {

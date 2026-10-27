@@ -1,4 +1,7 @@
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const { generateContent, buildGenerationConfig } = require('../config/geminiClient');
+
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
 const ROLES = ['owner', 'editor', 'viewer'];
 const CONTROL_TYPES = ['button', 'input', 'textarea', 'select', 'list', 'text', 'badge'];
 
@@ -59,28 +62,31 @@ function filterScreenMapForRole(map, role) {
 }
 
 async function generateScreenMap(context) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY no está configurada.');
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: `Genera el mapa de pantallas y mockups de este producto. No inventes funciones fuera del alcance y no omitas funciones clave.\n${JSON.stringify(context)}` }] }],
-      systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Incluye pantallas, controles, acciones, navegación y visibilidad para owner, editor y viewer. Debe existir una entrada y un resultado final.' }] },
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: { type: 'OBJECT', required: ['screens', 'transitions'], properties: {
-          screens: { type: 'ARRAY', items: { type: 'OBJECT', required: ['key', 'name', 'entry', 'result', 'roles', 'controls'], properties: {
-            key: { type: 'STRING' }, name: { type: 'STRING' }, description: { type: 'STRING' }, entry: { type: 'BOOLEAN' }, result: { type: 'BOOLEAN' }, roles: { type: 'ARRAY', items: { type: 'STRING' } },
-            controls: { type: 'ARRAY', items: { type: 'OBJECT', required: ['type', 'label', 'roles'], properties: { type: { type: 'STRING' }, label: { type: 'STRING' }, action: { type: 'STRING' }, roles: { type: 'ARRAY', items: { type: 'STRING' } } } } }
-          } } },
-          transitions: { type: 'ARRAY', items: { type: 'OBJECT', required: ['from', 'to', 'action', 'roles'], properties: { from: { type: 'STRING' }, to: { type: 'STRING' }, action: { type: 'STRING' }, roles: { type: 'ARRAY', items: { type: 'STRING' } } } } }
-        } }
-      }
-    })
+  const buildBody = (model) => ({
+    contents: [{ role: 'user', parts: [{ text: `Genera el mapa de pantallas y mockups de este producto. No inventes funciones fuera del alcance y no omitas funciones clave.\n${JSON.stringify(context)}` }] }],
+    systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Incluye pantallas, controles, acciones, navegación y visibilidad para owner, editor y viewer. Debe existir una entrada y un resultado final.' }] },
+    generationConfig: buildGenerationConfig({
+      model,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+      responseSchema: { type: 'OBJECT', required: ['screens', 'transitions'], properties: {
+        screens: { type: 'ARRAY', items: { type: 'OBJECT', required: ['key', 'name', 'entry', 'result', 'roles', 'controls'], properties: {
+          key: { type: 'STRING' }, name: { type: 'STRING' }, description: { type: 'STRING' }, entry: { type: 'BOOLEAN' }, result: { type: 'BOOLEAN' }, roles: { type: 'ARRAY', items: { type: 'STRING' } },
+          controls: { type: 'ARRAY', items: { type: 'OBJECT', required: ['type', 'label', 'roles'], properties: { type: { type: 'STRING' }, label: { type: 'STRING' }, action: { type: 'STRING' }, roles: { type: 'ARRAY', items: { type: 'STRING' } } } } }
+        } } },
+        transitions: { type: 'ARRAY', items: { type: 'OBJECT', required: ['from', 'to', 'action', 'roles'], properties: { from: { type: 'STRING' }, to: { type: 'STRING' }, action: { type: 'STRING' }, roles: { type: 'ARRAY', items: { type: 'STRING' } } } } }
+      } },
+    }),
   });
-  if (!response.ok) throw new Error('No se pudo generar el mapa de pantallas con Gemini.');
-  const data = await response.json();
+
+  const data = await generateContent({
+    model: MODEL,
+    body: buildBody(MODEL),
+    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 30000, retries: 1 },
+    timeoutMs: 20000,
+    retries: 1,
+  });
+
   return validateGeneratedScreenMap(JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text));
 }
 
