@@ -14,6 +14,7 @@ const baseTechnologies = {
   frontend: 'React',
   backend: 'Node.js + Express',
   database: 'PostgreSQL',
+  communication: 'HTTP/JSON entre la SPA y la API',
   infrastructure: 'Docker Compose',
 };
 
@@ -79,6 +80,7 @@ describe('Recomendación de arquitectura con IA', () => {
         frontend: 'React',
         backend: 'Servicios + Azure Service Bus',
         database: 'PostgreSQL con outbox',
+        communication: 'Eventos asíncronos por broker + REST para consultas',
         infrastructure: 'Docker Compose + broker',
       },
       operational: {
@@ -99,7 +101,7 @@ describe('Recomendación de arquitectura con IA', () => {
     expect(() => validateRecommendation({
       scenario: 'microservicios',
       rationale: 'Node, React, PostgreSQL, Docker.',
-      technologies: { frontend: 'React', backend: 'Node', database: 'PostgreSQL' },
+      technologies: { frontend: 'React', backend: 'Node', database: 'PostgreSQL', communication: 'REST' },
       operational: { docker: 'Docker' },
     })).toThrow('explicar por qué');
   });

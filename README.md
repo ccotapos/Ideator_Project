@@ -329,3 +329,22 @@ reservada al `owner`.
 
 El escenario **orientado a eventos** es el quinto escenario, agregado con el mismo
 nivel de detalle que los cuatro iniciales.
+
+### Arquitecturas base predefinidas
+
+Las cuatro arquitecturas base están definidas en el catálogo
+(`ideator_backend/src/config/architectureScenarios.js`) y documentadas en
+[`docs/arquitecturas.md`](docs/arquitecturas.md) (**v1.1**). Cada una define:
+
+- **Persistencia**, **backend** y **frontend**.
+- **Comunicación entre componentes** (HTTP/REST, broker de eventos, etc.).
+- **Infraestructura** y **operación** (Docker, variables de entorno y observabilidad).
+- Una **justificación de uso** (cuándo resulta apropiada).
+
+| Arquitectura | Comunicación entre componentes |
+| --- | --- |
+| Monolito en capas | En proceso + HTTP/JSON frontend↔API |
+| API REST desacoplada | HTTP/REST síncrono (JSON) |
+| Microservicios | REST/gRPC a través de API Gateway |
+| Serverless | HTTP (API Gateway) + eventos gestionados |
+| Orientada a eventos | Broker asíncrono + REST para consultas |

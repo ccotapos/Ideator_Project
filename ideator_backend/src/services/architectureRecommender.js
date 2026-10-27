@@ -23,8 +23,11 @@ function validateRecommendation(value) {
   }
 
   const technologies = value.technologies && typeof value.technologies === 'object' ? value.technologies : {};
-  if (Object.keys(technologies).length < 3) {
-    throw new Error('La recomendación debe detallar tecnologías de al menos tres capas.');
+  if (Object.keys(technologies).length < 4) {
+    throw new Error('La recomendación debe detallar tecnologías de al menos cuatro capas.');
+  }
+  if (!String(technologies.communication || '').trim()) {
+    throw new Error('La recomendación debe indicar la comunicación entre componentes.');
   }
 
   const operational = value.operational && typeof value.operational === 'object' ? value.operational : {};
@@ -57,7 +60,7 @@ function buildRecommendationPrompt(context) {
 
   return [
     'Eres un arquitecto de software senior. Debes recomendar UNA de las cinco arquitecturas base del catálogo para el producto descrito.',
-    'La justificación debe explicar POR QUÉ esa arquitectura es apropiada, relacionándola explícitamente con las funcionalidades/MVP, el modelo de datos, los endpoints y las pantallas ya definidos. No te limites a enumerar tecnologías.',
+    'La justificación debe explicar POR QUÉ esa arquitectura es apropiada, relacionándola explícitamente con las funcionalidades/MVP, el modelo de datos, los endpoints y las pantallas ya definidos. No te limites a enumerar tecnologías e indica también la comunicación entre componentes.',
     `Catálogo de arquitecturas:\n${catalog}`,
     `Contexto del proyecto:\n${JSON.stringify(context)}`,
   ].join('\n\n');
@@ -87,6 +90,7 @@ async function recommendArchitecture(context) {
               frontend: { type: 'STRING' },
               backend: { type: 'STRING' },
               database: { type: 'STRING' },
+              communication: { type: 'STRING' },
               infrastructure: { type: 'STRING' },
             },
           },
