@@ -5,10 +5,12 @@ const SCENARIOS = [
     id: 'monolito-capas',
     name: 'Monolito en capas',
     summary: 'Una sola aplicación desplegable organizada en capas (presentación, negocio y datos).',
+    justification: 'Apropiada para un MVP acotado con equipo pequeño, baja/media concurrencia y un único despliegue, donde la simplicidad operacional pesa más que escalar componentes por separado.',
     technologies: {
       frontend: 'React + Vite',
       backend: 'Node.js + Express',
       database: 'PostgreSQL',
+      communication: 'Llamadas en proceso dentro del monolito y HTTP/JSON entre el frontend y la API; sin broker ni comunicación entre servicios.',
       infrastructure: 'Docker Compose',
     },
     operational: {
@@ -27,10 +29,12 @@ const SCENARIOS = [
     id: 'api-rest-desacoplada',
     name: 'API REST desacoplada + SPA',
     summary: 'Frontend SPA independiente que consume una API REST propia.',
+    justification: 'Apropiada cuando hay varios clientes (web/móvil) o se necesita desplegar y escalar el frontend y la API de forma independiente.',
     technologies: {
       frontend: 'React SPA servida por Nginx/CDN',
       backend: 'API REST Node.js + Express',
       database: 'PostgreSQL',
+      communication: 'HTTP/REST síncrono (JSON) entre la SPA y la API; Nginx actúa como proxy inverso.',
       infrastructure: 'Docker + Nginx como proxy',
     },
     operational: {
@@ -49,10 +53,12 @@ const SCENARIOS = [
     id: 'microservicios',
     name: 'Microservicios',
     summary: 'Varios servicios autónomos por dominio, coordinados por un API Gateway.',
+    justification: 'Apropiada cuando el dominio está bien delimitado, hay varios equipos y se requiere escalar servicios específicos de forma autónoma.',
     technologies: {
       frontend: 'React SPA',
       backend: 'Servicios Node.js por dominio + API Gateway',
       database: 'PostgreSQL por servicio (datos aislados)',
+      communication: 'HTTP/REST (o gRPC) entre la SPA y el API Gateway, y entre el gateway y cada servicio; eventos opcionales para integraciones.',
       infrastructure: 'Docker Compose o Kubernetes',
     },
     operational: {
@@ -71,10 +77,12 @@ const SCENARIOS = [
     id: 'serverless',
     name: 'Serverless / FaaS',
     summary: 'Funciones gestionadas por la nube y servicios administrados, sin servidores propios.',
+    justification: 'Apropiada cuando la carga es variable o intermitente y se prefiere delegar la operación y el escalado al proveedor cloud.',
     technologies: {
       frontend: 'React SPA en hosting estático',
       backend: 'Funciones serverless (Azure Functions o AWS Lambda)',
       database: 'PostgreSQL gestionado o base NoSQL administrada',
+      communication: 'HTTP a través de API Gateway hacia las funciones; invocaciones gestionadas y colas/eventos del proveedor para procesos asíncronos.',
       infrastructure: 'Plataforma cloud (sin servidores que administrar)',
     },
     operational: {
@@ -93,10 +101,12 @@ const SCENARIOS = [
     id: 'event-driven',
     name: 'Orientada a eventos',
     summary: 'Servicios desacoplados que se comunican mediante eventos asíncronos por un broker.',
+    justification: 'Apropiada cuando predominan procesos asíncronos, picos de carga e integraciones desacopladas que no deben bloquear al usuario.',
     technologies: {
       frontend: 'React SPA',
       backend: 'Servicios Node.js + bus de eventos (Azure Service Bus, RabbitMQ o Kafka)',
       database: 'PostgreSQL con patrón outbox para publicar eventos de forma fiable',
+      communication: 'Asíncrona mediante un broker (Azure Service Bus, RabbitMQ o Kafka) con eventos; HTTP/REST para consultas síncronas.',
       infrastructure: 'Docker Compose con broker + servicios, o Kubernetes',
     },
     operational: {
@@ -118,7 +128,15 @@ function getScenario(id) {
 }
 
 function listScenarios() {
-  return SCENARIOS.map(({ id, name, summary }) => ({ id, name, summary }));
+  return SCENARIOS.map(({ id, name, summary, justification, technologies, whenToUse, tradeoffs }) => ({
+    id,
+    name,
+    summary,
+    justification,
+    technologies,
+    whenToUse,
+    tradeoffs,
+  }));
 }
 
 module.exports = { SCENARIOS, getScenario, listScenarios };

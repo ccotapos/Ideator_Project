@@ -1,5 +1,10 @@
 # Arquitecturas base de Ideator
 
+**Versión:** 1.1 · **Última revisión:** 2026-10-26
+**Cambios de esta versión:** se agrega la **comunicación entre componentes** y la
+**justificación de uso** de cada arquitectura, y se revisa la coherencia del stack
+(persistencia, backend, frontend, infraestructura y operación).
+
 Este documento describe las **cinco arquitecturas base** que Ideator usa para
 recomendar una solución. Los escenarios **1 a 4** son los iniciales del curso; el
 escenario **5 (orientada a eventos)** es el escenario adicional incorporado en
@@ -21,6 +26,8 @@ y es la fuente que consume la recomendación con IA.
 - Frontend: React + Vite.
 - Backend: Node.js + Express.
 - Base de datos: PostgreSQL.
+- Comunicación entre componentes: llamadas en proceso dentro del monolito y
+  HTTP/JSON entre el frontend y la API; sin broker ni comunicación entre servicios.
 - Infraestructura: Docker Compose.
 
 **Operación.**
@@ -30,8 +37,8 @@ y es la fuente que consume la recomendación con IA.
 - Observabilidad: logs estructurados, endpoint `/health` y trazabilidad en la
   tabla de actividad.
 
-**Cuándo usarla.** MVP acotado y equipo pequeño, baja/media concurrencia, una sola
-base de datos y un único despliegue.
+**Justificación de uso (cuándo es apropiada).** MVP acotado y equipo pequeño,
+baja/media concurrencia, una sola base de datos y un único despliegue.
 
 **Ventajas y desventajas.** Muy simple de operar y económico; escala
 verticalmente y cuesta modularizarlo al crecer.
@@ -46,6 +53,8 @@ verticalmente y cuesta modularizarlo al crecer.
 - Frontend: React SPA servida por Nginx/CDN.
 - Backend: API REST Node.js + Express.
 - Base de datos: PostgreSQL.
+- Comunicación entre componentes: HTTP/REST síncrono (JSON) entre la SPA y la API;
+  Nginx actúa como proxy inverso.
 - Infraestructura: Docker + Nginx como proxy.
 
 **Operación.**
@@ -54,9 +63,9 @@ verticalmente y cuesta modularizarlo al crecer.
   del frontend.
 - Observabilidad: logs por servicio, `/health` y métricas de latencia de la API.
 
-**Cuándo usarla.** Varios clientes (web, móvil) sobre la misma API, ciclos de
-despliegue distintos para frontend y backend, o necesidad de escalar la API de
-forma independiente.
+**Justificación de uso (cuándo es apropiada).** Varios clientes (web, móvil) sobre
+la misma API, ciclos de despliegue distintos para frontend y backend, o necesidad
+de escalar la API de forma independiente.
 
 **Ventajas y desventajas.** Desacopla y permite escalar por separado; añade CORS,
 versionado de API y más despliegues.
@@ -72,6 +81,8 @@ Gateway.
 - Frontend: React SPA.
 - Backend: servicios Node.js por dominio + API Gateway.
 - Base de datos: PostgreSQL por servicio (datos aislados).
+- Comunicación entre componentes: HTTP/REST (o gRPC) entre la SPA y el API Gateway,
+  y entre el gateway y cada servicio; eventos opcionales para integraciones.
 - Infraestructura: Docker Compose o Kubernetes.
 
 **Operación.**
@@ -80,8 +91,9 @@ Gateway.
 - Variables de entorno: configuración y secretos por servicio.
 - Observabilidad: trazas distribuidas, logs centralizados y métricas por servicio.
 
-**Cuándo usarla.** Dominios de negocio bien delimitados, equipos múltiples
-trabajando en paralelo o necesidad de escalar un dominio específico.
+**Justificación de uso (cuándo es apropiada).** Dominios de negocio bien
+delimitados, equipos múltiples trabajando en paralelo o necesidad de escalar un
+dominio específico.
 
 **Ventajas y desventajas.** Alta escalabilidad y autonomía; mayor complejidad
 operacional y consistencia eventual.
@@ -97,6 +109,8 @@ servidores propios que mantener.
 - Frontend: React SPA en hosting estático.
 - Backend: funciones serverless (Azure Functions o AWS Lambda).
 - Base de datos: PostgreSQL gestionado o base NoSQL administrada.
+- Comunicación entre componentes: HTTP a través de API Gateway hacia las funciones;
+  invocaciones gestionadas y colas/eventos del proveedor para procesos asíncronos.
 - Infraestructura: plataforma cloud (sin servidores que administrar).
 
 **Operación.**
@@ -107,8 +121,8 @@ servidores propios que mantener.
 - Observabilidad: Application Insights/CloudWatch, trazas por invocación y alertas
   de errores.
 
-**Cuándo usarla.** Carga muy variable o intermitente, bajo interés en administrar
-infraestructura, integraciones puntuales y pago por uso.
+**Justificación de uso (cuándo es apropiada).** Carga muy variable o intermitente,
+bajo interés en administrar infraestructura, integraciones puntuales y pago por uso.
 
 **Ventajas y desventajas.** Escala automática y bajo costo en reposo; dependencia
 del proveedor, *cold starts* y límites de ejecución.
@@ -126,6 +140,8 @@ de detalle que los cuatro iniciales.
 - Backend: servicios Node.js + bus de eventos (Azure Service Bus, RabbitMQ o Kafka).
 - Base de datos: PostgreSQL con patrón **outbox** para publicar eventos de forma
   fiable.
+- Comunicación entre componentes: asíncrona mediante un broker (Azure Service Bus,
+  RabbitMQ o Kafka) con eventos; HTTP/REST para consultas síncronas.
 - Infraestructura: Docker Compose con broker + servicios, o Kubernetes.
 
 **Operación.**
@@ -136,9 +152,9 @@ de detalle que los cuatro iniciales.
 - Observabilidad: **trazas distribuidas**, métricas por evento, **cola de mensajes
   fallidos (DLQ)** y `/health` por servicio.
 
-**Cuándo usarla.** Procesos asíncronos (notificaciones, integraciones, tareas en
-segundo plano), picos de carga que conviene absorber sin bloquear al usuario y
-módulos que deben evolucionar de forma desacoplada.
+**Justificación de uso (cuándo es apropiada).** Procesos asíncronos (notificaciones,
+integraciones, tareas en segundo plano), picos de carga que conviene absorber sin
+bloquear al usuario y módulos que deben evolucionar de forma desacoplada.
 
 **Ventajas y desventajas.** Desacopla y absorbe picos; exige **idempotencia**,
 manejo de **consistencia eventual** y monitoreo de la DLQ.

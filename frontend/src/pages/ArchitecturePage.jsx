@@ -6,6 +6,7 @@ const TECH_LABELS = {
   frontend: 'Frontend',
   backend: 'Backend',
   database: 'Base de datos',
+  communication: 'Comunicación entre componentes',
   infrastructure: 'Infraestructura',
 };
 
@@ -53,7 +54,12 @@ export default function ArchitecturePage({ projectId, role }) {
 
   if (loading) return <p className="chat-status">Cargando arquitectura…</p>;
 
-  const scenarioName = scenarios.find((item) => item.id === architecture?.scenario)?.name || architecture?.scenario;
+  const recommendedScenario = scenarios.find((item) => item.id === architecture?.scenario) || null;
+  const scenarioName = recommendedScenario?.name || architecture?.scenario;
+  const recommendedTechnologies = {
+    ...(recommendedScenario?.technologies || {}),
+    ...(architecture?.technologies || {}),
+  };
 
   return (
     <div className="architecture-page">
@@ -115,10 +121,10 @@ export default function ArchitecturePage({ projectId, role }) {
 
           <div className="architecture-grid">
             {Object.entries(TECH_LABELS).map(([key, label]) =>
-              architecture.technologies?.[key] ? (
+              recommendedTechnologies[key] ? (
                 <article className="architecture-card" key={key}>
                   <span className="architecture-label">{label}</span>
-                  <p>{architecture.technologies[key]}</p>
+                  <p>{recommendedTechnologies[key]}</p>
                 </article>
               ) : null
             )}
@@ -162,6 +168,18 @@ export default function ArchitecturePage({ projectId, role }) {
               <li key={scenario.id} className={scenario.id === architecture?.scenario ? 'active' : undefined}>
                 <strong>{scenario.name}</strong>
                 <span>{scenario.summary}</span>
+                <dl className="architecture-catalog-stack">
+                  <div><dt>Frontend</dt><dd>{scenario.technologies?.frontend}</dd></div>
+                  <div><dt>Backend</dt><dd>{scenario.technologies?.backend}</dd></div>
+                  <div><dt>Base de datos</dt><dd>{scenario.technologies?.database}</dd></div>
+                  <div><dt>Comunicación</dt><dd>{scenario.technologies?.communication}</dd></div>
+                  <div><dt>Infraestructura</dt><dd>{scenario.technologies?.infrastructure}</dd></div>
+                </dl>
+                {scenario.justification ? (
+                  <p className="architecture-catalog-justification">
+                    <strong>Justificación:</strong> {scenario.justification}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>

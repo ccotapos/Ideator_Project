@@ -1,19 +1,21 @@
 const fs = require('fs');
 const path = require('path');
-const defaultPool = require('../config/db');
 
 // Directorio de migraciones SQL: ideator_backend/migrations
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'migrations');
 
 // Aplica en orden todas las migraciones pendientes y registra cada una en la
 // tabla de control schema_migrations. Es idempotente: las ya aplicadas se omiten.
-async function runMigrations({ pool = defaultPool, dir = MIGRATIONS_DIR, logger = console } = {}) {
+async function runMigrations({ pool, dir = MIGRATIONS_DIR, logger = console } = {}) {
+  // Pool perezoso: se crea al ejecutar, después de cargar Key Vault.
+  const activePool = pool || require('../config/db');
+
   const files = fs
     .readdirSync(dir)
     .filter((file) => file.endsWith('.sql'))
     .sort();
 
-  const client = await pool.connect();
+  const client = await activePool.connect();
 
   try {
     await client.query(`
@@ -58,17 +60,19 @@ module.exports = { runMigrations, MIGRATIONS_DIR };
 
 // Permite ejecutarlo suelto: `npm run migrate`
 if (require.main === module) {
-  runMigrations()
-    .then((applied) => {
-      if (applied.length === 0) {
-        console.log('No hay migraciones pendientes.');
-      } else {
-        console.log(`Migraciones aplicadas: ${applied.join(', ')}`);
-      }
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error(error.message);
-      process.exit(1);
-    });
+  (async () => {
+    const { loadSecrets } = require('../config/keyVault');
+    await loadSecrets();
+
+    const applied = await runMigrations();
+    if (applied.length === 0) {
+      console.log('No hay migraciones pendientes.');
+    } else {
+      console.log(`Migraciones aplicadas: ${applied.join(', ')}`);
+    }
+    process.exit(0);
+  })().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
 }
