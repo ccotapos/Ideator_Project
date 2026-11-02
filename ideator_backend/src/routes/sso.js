@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { generators } = require('openid-client');
 const pool = require('../config/db');
 const { getSsoClient } = require('../config/sso');
+const { getJwtSecret } = require('../config/jwt');
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ router.get('/callback', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'secret_key',
+      getJwtSecret(),
       { expiresIn: '8h' }
     );
 

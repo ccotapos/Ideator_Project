@@ -112,6 +112,9 @@ router.post('/:id/messages', authenticateToken, async (req, res) => {
     if (!role) {
       return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
     }
+    if (!['owner', 'editor'].includes(role)) {
+      return res.status(403).json({ message: 'El rol Lector solo puede consultar la conversación.' });
+    }
 
     const session = await getOrCreateActiveSession(projectId, userId);
 
@@ -206,6 +209,9 @@ router.post('/:id/decisions', authenticateToken, async (req, res) => {
     const role = await getMembership(userId, projectId);
     if (!role) {
       return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
+    }
+    if (!['owner', 'editor'].includes(role)) {
+      return res.status(403).json({ message: 'El rol Lector no puede registrar decisiones.' });
     }
 
     const session = await getOrCreateActiveSession(projectId, userId);

@@ -913,6 +913,155 @@ button:disabled { cursor: wait; opacity: 0.6; }
   text-align: left;
 }
 
+.blocking-questions-panel {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #d8dee8;
+}
+
+.blocking-questions-header h3,
+.blocking-questions-header p {
+  margin: 0;
+}
+
+.blocking-questions-header p {
+  margin-top: 4px;
+  color: #667085;
+}
+
+.blocking-question-form {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.35fr) minmax(220px, 1fr) auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.blocking-question-form input,
+.blocking-question-form select {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+}
+
+.blocking-question-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.blocking-question-list li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #f1b6b6;
+  border-radius: 6px;
+  background: #fff7f7;
+}
+
+.blocking-question-list li.resolved {
+  border-color: #b7dfcb;
+  background: #f4fbf7;
+}
+
+.blocking-question-list span,
+.blocking-question-list strong,
+.blocking-question-list p {
+  display: block;
+  margin: 0;
+}
+
+.blocking-question-list span {
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.blocking-question-list p {
+  margin-top: 4px;
+  color: #475467;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 700px) {
+  .blocking-question-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.project-traceability {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #d8dee8;
+}
+
+.project-traceability h3 {
+  margin: 0 0 12px;
+}
+
+.decision-form {
+  display: grid;
+  grid-template-columns: 0.65fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.decision-form input {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.traceability-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.traceability-list li {
+  padding: 10px 12px;
+  border: 1px solid #e1e5ec;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.traceability-list strong,
+.traceability-list p,
+.traceability-list span {
+  display: block;
+  margin: 0;
+}
+
+.traceability-list p {
+  margin-top: 3px;
+}
+
+.traceability-list span,
+.traceability-list .empty {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 800px) {
+  .project-traceability,
+  .decision-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chat-bubble-time {
   display: block;
   margin-top: 4px;

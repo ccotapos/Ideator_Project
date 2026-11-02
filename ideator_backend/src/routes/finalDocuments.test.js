@@ -78,6 +78,7 @@ describe('Documentos finales y contradicciones', () => {
       .mockResolvedValueOnce({ rows: [] }) // architecture
       .mockResolvedValueOnce({ rows: [] }) // decisions
       .mockResolvedValueOnce({ rows: [{ rol: 'owner' }] }) // roles
+      .mockResolvedValueOnce({ rows: [] }) // blocking questions
       .mockResolvedValueOnce({ rows: [ // loadDocuments
         { tipo: 'especificacion', contenido_md: '# Especificación', updated_at: '2026-01-01' },
         { tipo: 'arquitectura', contenido_md: '# Arquitectura', updated_at: '2026-01-01' },

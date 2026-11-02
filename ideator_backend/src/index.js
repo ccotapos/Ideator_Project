@@ -10,6 +10,9 @@ async function startServer() {
     console.log(`Key Vault habilitado: ${secrets.loaded.length} secretos cargados.`);
   }
 
+  const { getJwtSecret } = require('./config/jwt');
+  getJwtSecret();
+
   // 2. Módulos que dependen de los secretos.
   const pool = require('./config/db');
   const authRoutes = require('./routes/auth');
@@ -22,6 +25,7 @@ async function startServer() {
   const screenMapRoutes = require('./routes/screenMaps');
   const architectureRoutes = require('./routes/architectures');
   const finalDocumentRoutes = require('./routes/finalDocuments');
+  const questionRoutes = require('./routes/questions');
   const { runMigrations } = require('./db/migrate');
 
   const app = express();
@@ -31,6 +35,8 @@ async function startServer() {
     process.env.FRONTEND_ORIGIN,
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
   ].filter(Boolean);
 
   // Configuración de CORS dinámica
@@ -59,6 +65,7 @@ async function startServer() {
   app.use('/api/projects', screenMapRoutes);
   app.use('/api/projects', architectureRoutes);
   app.use('/api/projects', finalDocumentRoutes);
+  app.use('/api/projects', questionRoutes);
 
   // Endpoint para comprobación de estado e integridad de la BD
   app.get('/health', async (req, res) => {

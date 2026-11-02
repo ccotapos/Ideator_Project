@@ -14,3 +14,13 @@ export const sendProjectMessage = async (projectId, content, token) => {
     body: { content },
   });
 };
+
+export const getProjectDecisions = async (projectId, token) => {
+  const data = await apiFetch(`/api/projects/${projectId}/decisions`, { token });
+  return data.decisions;
+};
+
+export const createProjectDecision = async (projectId, body, token) => {
+  const data = await apiFetch(`/api/projects/${projectId}/decisions`, { method: 'POST', body, token });
+  return data.decision;
+};

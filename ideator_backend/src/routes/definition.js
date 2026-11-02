@@ -33,6 +33,38 @@ function canEdit(role) {
   return role === 'owner' || role === 'editor';
 }
 
+async function lockDefinitionRevision(client, projectId, expectedRevision, res) {
+  if (!Number.isInteger(expectedRevision) || expectedRevision < 0) {
+    res.status(400).json({ message: 'La revisión esperada de la definición es obligatoria.' });
+    return null;
+  }
+  const result = await client.query(
+    'SELECT definicion_revision FROM proyectos WHERE id = $1 FOR UPDATE;',
+    [projectId]
+  );
+  if (!result.rows[0]) {
+    res.status(404).json({ message: 'Proyecto no encontrado.' });
+    return null;
+  }
+  if (result.rows[0].definicion_revision !== expectedRevision) {
+    res.status(409).json({
+      message: 'Otro integrante modificó la definición. Recarga la página antes de guardar nuevamente.',
+      currentRevision: result.rows[0].definicion_revision,
+    });
+    return null;
+  }
+  return result.rows[0].definicion_revision;
+}
+
+async function incrementDefinitionRevision(client, projectId) {
+  const result = await client.query(
+    `UPDATE proyectos SET definicion_revision = definicion_revision + 1
+     WHERE id = $1 RETURNING definicion_revision;`,
+    [projectId]
+  );
+  return result.rows[0].definicion_revision;
+}
+
 // GET /api/projects/:id/definition/questions - Flujo de preguntas por sección
 router.get('/:id/definition/questions', authenticateToken, async (req, res) => {
   try {
@@ -57,6 +89,7 @@ router.put('/:id/definition/sections', authenticateToken, async (req, res) => {
     context: req.body.context,
     target_users: req.body.targetUsers,
   };
+  const expectedRevision = req.body.expectedRevision;
 
   if (Object.values(answers).some((answer) => !answer || !answer.trim())) {
     return res.status(400).json({
@@ -67,12 +100,16 @@ router.put('/:id/definition/sections', authenticateToken, async (req, res) => {
   const client = await pool.connect();
 
   try {
+    await client.query('BEGIN');
     const role = await getMembership(userId, projectId, client);
     if (!canEdit(role)) {
+      await client.query('ROLLBACK');
       return res.status(403).json({ message: 'No tienes permisos para editar la definición.' });
     }
-
-    await client.query('BEGIN');
+    if (await lockDefinitionRevision(client, projectId, expectedRevision, res) === null) {
+      await client.query('ROLLBACK');
+      return;
+    }
     const savedSections = [];
 
     for (const [section, answer] of Object.entries(answers)) {
@@ -96,9 +133,10 @@ router.put('/:id/definition/sections', authenticateToken, async (req, res) => {
       action: 'definition_sections_updated',
       details: { sections: Object.keys(answers) },
     });
+    const revision = await incrementDefinitionRevision(client, projectId);
     await client.query('COMMIT');
 
-    return res.status(200).json({ sections: savedSections });
+    return res.status(200).json({ sections: savedSections, revision });
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error al guardar definición:', error);
@@ -113,6 +151,7 @@ router.put('/:id/definition/mvp', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
   const userId = req.user.id;
   const { inScope, outOfScope, journey } = req.body;
+  const expectedRevision = req.body.expectedRevision;
 
   const validLists = [inScope, outOfScope, journey].every(
     (list) => Array.isArray(list) && list.length > 0 && list.every((item) => typeof item === 'string' && item.trim())
@@ -126,12 +165,16 @@ router.put('/:id/definition/mvp', authenticateToken, async (req, res) => {
   const client = await pool.connect();
 
   try {
+    await client.query('BEGIN');
     const role = await getMembership(userId, projectId, client);
     if (!canEdit(role)) {
+      await client.query('ROLLBACK');
       return res.status(403).json({ message: 'No tienes permisos para editar el MVP.' });
     }
-
-    await client.query('BEGIN');
+    if (await lockDefinitionRevision(client, projectId, expectedRevision, res) === null) {
+      await client.query('ROLLBACK');
+      return;
+    }
     await client.query('DELETE FROM mvp_funcionalidades WHERE proyecto_id = $1;', [projectId]);
     await client.query('DELETE FROM recorrido_principal WHERE proyecto_id = $1;', [projectId]);
 
@@ -165,6 +208,7 @@ router.put('/:id/definition/mvp', authenticateToken, async (req, res) => {
         journeyStepCount: journey.length,
       },
     });
+    const revision = await incrementDefinitionRevision(client, projectId);
     await client.query('COMMIT');
 
     return res.status(200).json({
@@ -173,6 +217,7 @@ router.put('/:id/definition/mvp', authenticateToken, async (req, res) => {
         outOfScope: outOfScope.map((item) => item.trim()),
         journey: journey.map((item) => item.trim()),
       },
+      revision,
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -193,7 +238,7 @@ router.get('/:id/definition', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
     }
 
-    const [sectionsResult, featuresResult, journeyResult] = await Promise.all([
+    const [sectionsResult, featuresResult, journeyResult, revisionResult] = await Promise.all([
       pool.query(
         `SELECT seccion, respuesta, respondido_por, updated_at
          FROM definicion_secciones WHERE proyecto_id = $1;`,
@@ -211,6 +256,7 @@ router.get('/:id/definition', authenticateToken, async (req, res) => {
          WHERE proyecto_id = $1 ORDER BY posicion;`,
         [projectId]
       ),
+      pool.query('SELECT definicion_revision FROM proyectos WHERE id = $1;', [projectId]),
     ]);
 
     const sections = Object.fromEntries(
@@ -225,6 +271,7 @@ router.get('/:id/definition', authenticateToken, async (req, res) => {
 
     return res.status(200).json({
       definition: {
+        revision: revisionResult.rows[0]?.definicion_revision || 0,
         sections,
         mvp: {
           inScope,
@@ -249,19 +296,44 @@ router.get('/:id/definition/validate', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Acceso denegado. No perteneces a este proyecto.' });
     }
 
-    const [sectionsResult, featuresResult, journeyResult, modelsResult, endpointsResult, screensResult, architectureResult] = await Promise.all([
+    const [sectionsResult, featuresResult, journeyResult, modelResult, endpointsResult, screensResult, architectureResult, blockingResult] = await Promise.all([
       pool.query(`SELECT seccion, respuesta FROM definicion_secciones WHERE proyecto_id = $1;`, [projectId]),
       pool.query(`SELECT alcance, descripcion FROM mvp_funcionalidades WHERE proyecto_id = $1;`, [projectId]),
       pool.query(`SELECT descripcion FROM recorrido_principal WHERE proyecto_id = $1;`, [projectId]),
-      pool.query(`SELECT * FROM modelo_datos WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
-      pool.query(`SELECT * FROM endpoints_spec WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
-      pool.query(`SELECT * FROM pantallas_mapa WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
-      pool.query(`SELECT * FROM arquitectura_proyecto WHERE proyecto_id = $1;`, [projectId]).catch(() => ({ rows: [] })),
+      pool.query(`SELECT id, estado FROM modelos_datos WHERE proyecto_id = $1;`, [projectId]),
+      pool.query(`SELECT e.metodo, e.ruta, e.operacion, e.entidad, e.atributos
+                  FROM endpoints e
+                  JOIN especificaciones_endpoints s ON s.id = e.especificacion_id
+                  WHERE s.proyecto_id = $1 ORDER BY e.posicion, e.id;`, [projectId]),
+      pool.query(`SELECT p.clave, p.nombre, p.roles, p.controles
+                  FROM pantallas p
+                  JOIN mapas_pantallas m ON m.id = p.mapa_id
+                  WHERE m.proyecto_id = $1 ORDER BY p.posicion, p.id;`, [projectId]),
+      pool.query(`SELECT escenario, estado FROM arquitecturas WHERE proyecto_id = $1;`, [projectId]),
+      pool.query(
+        `SELECT categoria, pregunta FROM preguntas_bloqueantes
+         WHERE proyecto_id = $1 AND resuelta = FALSE ORDER BY created_at;`,
+        [projectId]
+      ),
     ]);
+
+    let entities = [];
+    if (modelResult.rows[0]) {
+      const [entityResult, attributeResult] = await Promise.all([
+        pool.query('SELECT id, nombre FROM modelo_entidades WHERE modelo_id = $1;', [modelResult.rows[0].id]),
+        pool.query(`SELECT a.* FROM modelo_atributos a
+                    JOIN modelo_entidades e ON e.id = a.entidad_id
+                    WHERE e.modelo_id = $1;`, [modelResult.rows[0].id]),
+      ]);
+      entities = entityResult.rows.map((entity) => ({
+        ...entity,
+        attributes: attributeResult.rows.filter((attribute) => attribute.entidad_id === entity.id),
+      }));
+    }
 
     const projectData = {
       architecture: architectureResult.rows[0] || null,
-      dataModel: { entities: modelsResult.rows },
+      dataModel: { entities },
       spec: { endpoints: endpointsResult.rows },
       screens: { views: screensResult.rows },
       definition: {
@@ -275,6 +347,14 @@ router.get('/:id/definition/validate', authenticateToken, async (req, res) => {
     };
 
     const validation = validateProjectConsistency(projectData);
+    if (blockingResult.rows.length > 0) {
+      validation.valid = false;
+      validation.errors.push(
+        ...blockingResult.rows.map((item) =>
+          `Pregunta bloqueante pendiente (${item.categoria}): ${item.pregunta}`
+        )
+      );
+    }
 
     if (!validation.valid) {
       return res.status(400).json({

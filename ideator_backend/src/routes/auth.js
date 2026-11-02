@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { getJwtSecret } = require('../config/jwt');
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'secret_key',
+      getJwtSecret(),
       { expiresIn: '8h' }
     );
 

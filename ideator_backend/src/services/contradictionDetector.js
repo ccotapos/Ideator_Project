@@ -7,6 +7,7 @@ function detectContradictions({
   endpointSpec,
   screenMap,
   architecture,
+  blockingQuestions,
   consistency,
 } = {}) {
   const contradictions = [];
@@ -15,6 +16,17 @@ function detectContradictions({
   const sections = definition?.sections || [];
   const features = definition?.features || [];
   const journey = definition?.journey || [];
+
+  (blockingQuestions || []).forEach((question) => {
+    push({
+      code: `pregunta_bloqueante_${question.id}`,
+      stage: 'definicion',
+      tab: 'revision',
+      stages: ['definicion'],
+      message: `Pregunta bloqueante sin resolver: ${question.pregunta}`,
+      reference: question.categoria,
+    });
+  });
 
   if (sections.length === 0) {
     push({

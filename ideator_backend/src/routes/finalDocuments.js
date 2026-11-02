@@ -44,7 +44,7 @@ async function loadDocuments(queryable, projectId) {
 }
 
 async function loadContext(queryable, projectId) {
-  const [sections, features, journey, modelRow, specRow, mapRow, archRow, decisions, roles] = await Promise.all([
+  const [sections, features, journey, modelRow, specRow, mapRow, archRow, decisions, roles, blockingQuestions] = await Promise.all([
     queryable.query('SELECT seccion, respuesta FROM definicion_secciones WHERE proyecto_id = $1;', [projectId]),
     queryable.query("SELECT alcance, descripcion FROM mvp_funcionalidades WHERE proyecto_id = $1 ORDER BY alcance, posicion;", [projectId]),
     queryable.query('SELECT descripcion FROM recorrido_principal WHERE proyecto_id = $1 ORDER BY posicion;', [projectId]),
@@ -54,6 +54,11 @@ async function loadContext(queryable, projectId) {
     queryable.query('SELECT * FROM arquitecturas WHERE proyecto_id = $1;', [projectId]),
     queryable.query('SELECT d.titulo, d.contenido FROM decisiones d JOIN sesiones s ON s.id = d.sesion_id WHERE s.proyecto_id = $1 ORDER BY d.created_at;', [projectId]),
     queryable.query('SELECT DISTINCT rol FROM proyecto_usuario WHERE proyecto_id = $1;', [projectId]),
+    queryable.query(
+      `SELECT id, categoria, pregunta FROM preguntas_bloqueantes
+       WHERE proyecto_id = $1 AND resuelta = FALSE ORDER BY created_at, id;`,
+      [projectId]
+    ),
   ]);
 
   let dataModel = null;
@@ -126,6 +131,7 @@ async function loadContext(queryable, projectId) {
     architecture,
     decisions: decisions.rows,
     roles: roles.rows.map((row) => row.rol),
+    blockingQuestions: blockingQuestions.rows,
     consistency,
   };
 }

@@ -45,3 +45,8 @@ export const inviteMember = async (projectId, email, role = 'editor', token) => 
     body: { email, role },
   });
 };
+
+export const getProjectActivity = async (projectId, token) => {
+  const data = await apiFetch(`/api/projects/${projectId}/activity`, { token });
+  return data.activity;
+};

@@ -40,14 +40,15 @@ describe('Definición guiada del proyecto', () => {
       'target_users',
     ]);
 
-    client.query
-      .mockResolvedValueOnce({ rows: [{ rol: 'owner' }] })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({ rows: [{ seccion: 'problem' }] })
-      .mockResolvedValueOnce({ rows: [{ seccion: 'context' }] })
-      .mockResolvedValueOnce({ rows: [{ seccion: 'target_users' }] })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
+    client.query.mockImplementation(async (query) => {
+      if (query.includes('SELECT rol')) return { rows: [{ rol: 'owner' }] };
+      if (query.includes('SELECT definicion_revision')) return { rows: [{ definicion_revision: 0 }] };
+      if (query.includes('INSERT INTO definicion_secciones')) {
+        return { rows: [{ seccion: query.includes('RETURNING') ? 'saved' : null }] };
+      }
+      if (query.includes('UPDATE proyectos')) return { rows: [{ definicion_revision: 1 }] };
+      return { rows: [] };
+    });
 
     const saveResponse = await request(app)
       .put('/api/projects/10/definition/sections')
@@ -56,6 +57,7 @@ describe('Definición guiada del proyecto', () => {
         problem: 'Los equipos pierden acuerdos importantes.',
         context: 'Trabajo remoto con varias herramientas.',
         targetUsers: 'Equipos pequeños de producto.',
+        expectedRevision: 0,
       });
 
     expect(saveResponse.statusCode).toBe(200);
@@ -68,17 +70,12 @@ describe('Definición guiada del proyecto', () => {
   });
 
   test('ID-32 persiste alcance del MVP y recorrido en orden', async () => {
-    client.query
-      .mockResolvedValueOnce({ rows: [{ rol: 'editor' }] })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
+    client.query.mockImplementation(async (query) => {
+      if (query.includes('SELECT rol')) return { rows: [{ rol: 'editor' }] };
+      if (query.includes('SELECT definicion_revision')) return { rows: [{ definicion_revision: 3 }] };
+      if (query.includes('UPDATE proyectos')) return { rows: [{ definicion_revision: 4 }] };
+      return { rows: [] };
+    });
 
     const response = await request(app)
       .put('/api/projects/10/definition/mvp')
@@ -87,6 +84,7 @@ describe('Definición guiada del proyecto', () => {
         inScope: ['Crear proyecto', 'Definir problema'],
         outOfScope: ['Facturación'],
         journey: ['Crear proyecto', 'Responder preguntas', 'Revisar definición'],
+        expectedRevision: 3,
       });
 
     expect(response.statusCode).toBe(200);
@@ -102,5 +100,22 @@ describe('Definición guiada del proyecto', () => {
       ['10', 2, 'Revisar definición', 7]
     );
     expect(client.query).toHaveBeenCalledWith('COMMIT');
+  });
+
+  test('rechaza una edición construida sobre una revisión antigua', async () => {
+    client.query.mockImplementation(async (query) => {
+      if (query.includes('SELECT rol')) return { rows: [{ rol: 'editor' }] };
+      if (query.includes('SELECT definicion_revision')) return { rows: [{ definicion_revision: 5 }] };
+      return { rows: [] };
+    });
+
+    const response = await request(app)
+      .put('/api/projects/10/definition/sections')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ problem: 'Problema', context: 'Contexto', targetUsers: 'Usuarios', expectedRevision: 4 });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.body.currentRevision).toBe(5);
+    expect(client.query).toHaveBeenCalledWith('ROLLBACK');
   });
 });

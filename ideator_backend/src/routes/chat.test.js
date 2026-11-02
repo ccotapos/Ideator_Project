@@ -73,4 +73,20 @@ describe('Modelo conversacional', () => {
       ['10']
     );
   });
+
+  test('un Lector no puede enviar mensajes ni registrar decisiones', async () => {
+    pool.query.mockResolvedValue({ rows: [{ rol: 'viewer' }] });
+
+    const messageResponse = await request(app)
+      .post('/api/projects/10/messages')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Intento de edición' });
+    const decisionResponse = await request(app)
+      .post('/api/projects/10/decisions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Intento de decisión' });
+
+    expect(messageResponse.statusCode).toBe(403);
+    expect(decisionResponse.statusCode).toBe(403);
+  });
 });

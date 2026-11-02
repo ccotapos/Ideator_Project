@@ -12,6 +12,7 @@ import ArchitecturePage from './ArchitecturePage.jsx';
 import FinalDocumentsPage from './FinalDocumentsPage.jsx';
 import { getProject, updateProject } from '../api/projects.js';
 import { formatDate } from '../utils/date.js';
+import ProjectActivity from '../components/ProjectActivity.jsx';
 
 const roleLabels = { owner: 'Owner', editor: 'Colaborador', viewer: 'Lector' };
 
@@ -237,7 +238,12 @@ export default function ProjectDetail() {
         </button>
       </div>
 
-      {activeTab === 'resumen' && <ProjectMembers projectId={projectId} />}
+      {activeTab === 'resumen' && (
+        <>
+          <ProjectMembers projectId={projectId} role={role} />
+          <ProjectActivity projectId={projectId} role={role} />
+        </>
+      )}
       {activeTab === 'chat' && <ProjectChatPanel projectId={projectId} />}
       {activeTab === 'revision' && <ReviewDefinitionPage projectId={projectId} role={role} />}
       {activeTab === 'modelo' && <DataModelPage projectId={projectId} role={role} />}

@@ -79,7 +79,7 @@ function validateProjectConsistency(projectData) {
   const { architecture, dataModel, endpoints, spec, screens } = projectData;
 
   // 1. Verificar selección de Arquitectura
-  if (!architecture || !architecture.selectedOption) {
+  if (!architecture || !(architecture.scenario || architecture.escenario || architecture.selectedOption)) {
     errors.push({
       code: 'arquitectura_faltante',
       message: "Falta seleccionar la arquitectura base del proyecto en la etapa correspondiente."

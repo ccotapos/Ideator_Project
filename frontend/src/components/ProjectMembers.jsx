@@ -4,7 +4,7 @@ import { getProjectMembers, inviteMember } from '../api/projects.js';
 
 const roleLabels = { owner: 'Owner', editor: 'Colaborador', viewer: 'Lector' };
 
-export const ProjectMembers = ({ projectId }) => {
+export const ProjectMembers = ({ projectId, role: currentRole }) => {
   const { token } = useAuth();
   const [members, setMembers] = useState([]);
   const [email, setEmail] = useState('');
@@ -54,7 +54,7 @@ export const ProjectMembers = ({ projectId }) => {
     <div className="project-members">
       <h3>Equipo del proyecto</h3>
 
-      <form className="invite-form" onSubmit={handleInvite}>
+      {currentRole === 'owner' ? <form className="invite-form" onSubmit={handleInvite}>
         <input
           type="email"
           placeholder="Correo del colaborador"
@@ -69,7 +69,7 @@ export const ProjectMembers = ({ projectId }) => {
         <button type="submit" className="btn-primary invite-btn" disabled={isInviting}>
           {isInviting ? 'Invitando…' : 'Invitar'}
         </button>
-      </form>
+      </form> : null}
 
       {error ? <p className="form-error" role="alert">{error}</p> : null}
       {success ? <p className="form-success" role="status">{success}</p> : null}

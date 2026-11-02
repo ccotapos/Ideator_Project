@@ -330,4 +330,35 @@ Las cuatro arquitecturas base están definidas en el catálogo
 | Serverless | HTTP (API Gateway) + eventos gestionados |
 | Orientada a eventos | Broker asíncrono + REST para consultas |
 
+## Cierre de etapas, colaboración y trazabilidad
+
+La migración `016_blocking_questions_and_definition_revision.sql` incorpora dos
+controles para el trabajo colaborativo:
+
+- Preguntas bloqueantes persistidas por categoría, con autor, respuesta y
+  responsable de resolución. Mientras haya una pendiente, la validación y la
+  generación de documentos finales quedan bloqueadas.
+- Revisión de la definición para detectar ediciones simultáneas. Si otro
+  integrante guardó antes, la API responde `409` y solicita recargar la versión
+  más reciente en vez de sobrescribirla.
+
+El resumen del proyecto muestra las decisiones y el historial de actividad con
+su autor y fecha. Los roles `owner` y `editor` pueden conversar, decidir y
+editar; el rol `viewer` es estrictamente de lectura.
+
+```http
+GET   /api/projects/{id}/blocking-questions
+POST  /api/projects/{id}/blocking-questions
+PATCH /api/projects/{id}/blocking-questions/{questionId}/resolve
+GET   /api/projects/{id}/validate-stage
+GET   /api/projects/{id}/activity
+```
+
+Para verificar el proyecto:
+
+```bash
+cd ideator_backend && npm test
+cd ../frontend && pnpm test && pnpm build
+```
+
 

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const { getJwtSecret } = require('../config/jwt');
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -14,7 +15,7 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ message: 'No autorizado. Token no proporcionado.' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (error, decoded) => {
+  jwt.verify(token, getJwtSecret(), (error, decoded) => {
     if (error) {
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({ message: 'La sesión ha expirado. Inicia sesión nuevamente.' });
