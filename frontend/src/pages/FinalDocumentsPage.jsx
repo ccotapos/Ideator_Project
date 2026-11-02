@@ -12,6 +12,14 @@ const STAGE_LABELS = {
   arquitectura: 'Arquitectura',
 };
 
+const STAGE_TABS = {
+  definicion: 'revision',
+  modelo: 'modelo',
+  endpoints: 'endpoints',
+  mockups: 'mockups',
+  arquitectura: 'arquitectura',
+};
+
 function downloadMarkdown(filename, content) {
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -117,9 +125,18 @@ export default function FinalDocumentsPage({ projectId, role, onNavigateStage })
                     <span className="contradiction-reference">Referencia: {item.reference}</span>
                   ) : null}
                 </div>
-                <button type="button" className="btn-secondary" onClick={() => goToStage(item.tab)}>
-                  Ir a {STAGE_LABELS[item.stage] || item.stage}
-                </button>
+                <div className="contradiction-actions">
+                  {(item.stages?.length ? item.stages : [item.stage]).map((stage) => (
+                    <button
+                      key={stage}
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => goToStage(STAGE_TABS[stage] || item.tab || stage)}
+                    >
+                      Ir a {STAGE_LABELS[stage] || stage}
+                    </button>
+                  ))}
+                </div>
               </li>
             ))}
           </ul>

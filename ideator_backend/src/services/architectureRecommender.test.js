@@ -97,6 +97,20 @@ describe('Recomendación de arquitectura con IA', () => {
     expect(recommendation.operational.observability).toContain('DLQ');
   });
 
+  test('completa las capas omitidas desde la arquitectura predefinida', () => {
+    const result = validateRecommendation({
+      scenario: 'monolito-capas',
+      rationale:
+        'Para un MVP pequeño con un equipo reducido, un monolito en capas simplifica el despliegue y reduce el costo operativo mientras se valida el producto.',
+      technologies: { frontend: 'React', backend: 'Node.js' },
+      operational: { docker: 'Docker Compose' },
+    });
+
+    expect(result.technologies.database).toBeTruthy();
+    expect(result.technologies.communication).toBeTruthy();
+    expect(result.technologies.infrastructure).toBeTruthy();
+  });
+
   test('rechaza una justificación que solo nombra tecnologías', () => {
     expect(() => validateRecommendation({
       scenario: 'microservicios',

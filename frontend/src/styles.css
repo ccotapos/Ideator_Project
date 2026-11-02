@@ -333,6 +333,7 @@ button:disabled { cursor: wait; opacity: 0.6; }
 .contradiction-report ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
 .contradiction-report li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid #f5c2c0; border-radius: 8px; background: #fff; }
 .contradiction-report li strong { display: block; color: #7a271a; }
+.contradiction-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .contradiction-stages, .contradiction-reference { display: block; margin-top: 4px; color: #667085; font-size: 0.82rem; }
 .contradiction-ok { margin: 0; padding: 12px 14px; border-left: 4px solid #13795b; background: #e7f5ef; color: #0f5132; }
 .final-docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }

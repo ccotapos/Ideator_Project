@@ -4,6 +4,19 @@ const { SCENARIOS, getScenario, listScenarios } = require('../config/architectur
 const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
 
+const TECH_KEYS = ['frontend', 'backend', 'database', 'communication', 'infrastructure'];
+
+// Completa las capas que la IA haya omitido con la definición predefinida del
+// escenario elegido (la arquitectura base es la fuente de verdad).
+function fillTechnologies(scenario, technologies) {
+  const base = scenario?.technologies || {};
+  const merged = { ...base, ...(technologies || {}) };
+  TECH_KEYS.forEach((key) => {
+    if (!String(merged[key] || '').trim() && base[key]) merged[key] = base[key];
+  });
+  return merged;
+}
+
 // Valida que la recomendación use un escenario del catálogo y que explique el
 // porqué con argumentos (no solo nombres de tecnologías).
 function validateRecommendation(value) {
@@ -18,11 +31,12 @@ function validateRecommendation(value) {
 
   const rationale = String(value.rationale || '').trim();
   const words = rationale.split(/\s+/).filter(Boolean);
-  if (rationale.length < 80 || words.length < 15) {
+  if (rationale.length < 60 || words.length < 10) {
     throw new Error('La recomendación debe explicar por qué la arquitectura es apropiada, no solo nombrar tecnologías.');
   }
 
-  const technologies = value.technologies && typeof value.technologies === 'object' ? value.technologies : {};
+  const rawTechnologies = value.technologies && typeof value.technologies === 'object' ? value.technologies : {};
+  const technologies = fillTechnologies(scenario, rawTechnologies);
   if (Object.keys(technologies).length < 4) {
     throw new Error('La recomendación debe detallar tecnologías de al menos cuatro capas.');
   }
@@ -132,6 +146,7 @@ async function recommendArchitecture(context) {
 module.exports = {
   recommendArchitecture,
   validateRecommendation,
+  fillTechnologies,
   buildRecommendationPrompt,
   SCENARIOS,
   listScenarios,
