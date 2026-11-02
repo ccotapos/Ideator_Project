@@ -5,25 +5,6 @@ docker compose up
 
 abrir http://localhost:5173/
 
-## Agente de IA en Azure Foundry
-
-El chat del proyecto usa el agente persistente `ideator-deepseek-agent` del
-proyecto Azure Foundry `ideator-galaz`. El backend envia el historial reciente
-y un contexto basado en el enunciado semestral para que el agente detecte
-ambiguedades, preguntas bloqueantes e inconsistencias entre definicion, datos,
-API, pantallas y arquitectura.
-
-La configuracion vive en `ideator_backend/.env`, que esta excluido de Git:
-
-```env
-AI_PROVIDER=foundry
-FOUNDRY_PROJECT_ENDPOINT=https://ideator-galaz-resource.services.ai.azure.com/api/projects/ideator-galaz
-FOUNDRY_AGENT_NAME=ideator-deepseek-agent
-FOUNDRY_API_KEY=clave-del-proyecto
-```
-
-Si `AI_PROVIDER` no es `foundry`, el backend conserva Gemini como alternativa.
-
 ## Integrantes
 
 - Diego Galaz
@@ -349,70 +330,4 @@ Las cuatro arquitecturas base están definidas en el catálogo
 | Serverless | HTTP (API Gateway) + eventos gestionados |
 | Orientada a eventos | Broker asíncrono + REST para consultas |
 
-## Azure Key Vault
 
-El backend puede leer los secretos desde **Azure Key Vault** al arrancar
-(`src/config/keyVault.js`), antes de importar `config/db` y las rutas. Si no se
-configura, sigue usando `.env`.
-
-Variables (en `.env`, no se suben al repo):
-
-```env
-AZURE_KEY_VAULT_URL=https://papulinces.vault.azure.net
-# En local con Docker (service principal):
-AZURE_TENANT_ID=...
-AZURE_CLIENT_ID=...
-AZURE_CLIENT_SECRET=...
-```
-
-En Azure, `DefaultAzureCredential` usa **Managed Identity** (dale el rol
-*Key Vault Secrets User*); no hace falta client secret.
-
-Mapeo de secretos (`src/config/keyVault.js`):
-
-| Variable de entorno | Secreto en Key Vault |
-| --- | --- |
-| `DB_PASSWORD` | `db-password` |
-| `JWT_SECRET` | `jwt-secret` |
-| `SSO_CLIENT_SECRET` | `sso-client-secret` |
-| `GEMINI_API_KEY` | `gemini-api-key` |
-| `FOUNDRY_API_KEY` | `foundry-api-key` |
-
-### Activación paso a paso
-
-1. **Crear un service principal** (para Docker local) en Azure Portal:
-   - Microsoft Entra ID → *App registrations* → *New registration* (`ideator-keyvault`).
-   - *Certificates & secrets* → *New client secret* → copia el **valor**.
-   - Anota **Application (client) ID** y **Directory (tenant) ID**.
-2. **Dar permiso al vault**: Key Vault `papulinces` → *Access control (IAM)* →
-   *Add role assignment* → rol **Key Vault Secrets User** → asigna la app.
-   - En Azure (App Service/Container Apps/AKS) usa **Managed Identity** en lugar
-     del service principal.
-3. **Configurar `.env`**:
-   ```env
-   AZURE_KEY_VAULT_URL=https://papulinces.vault.azure.net
-   AZURE_TENANT_ID=<tenant-id>
-   AZURE_CLIENT_ID=<client-id>
-   AZURE_CLIENT_SECRET=<client-secret>
-   ```
-4. **Provisionar los secretos** desde `.env` (idempotente):
-   ```bash
-   cd ideator_backend
-   npm run keyvault:bootstrap
-   ```
-5. **Activar y recrear el backend**:
-   ```bash
-   docker compose up -d --force-recreate backend
-   ```
-   En los logs debe aparecer `Key Vault: db-password -> DB_PASSWORD`, etc.
-
-### Administración manual de secretos
-
-```bash
-node scripts/keyvault-secrets.js set db-password "valor"
-node scripts/keyvault-secrets.js get db-password
-node scripts/keyvault-secrets.js update db-password disabled
-node scripts/keyvault-secrets.js delete db-password
-```
-
-> El backend usa Node 22 porque el SDK de Azure requiere `>=22`.
