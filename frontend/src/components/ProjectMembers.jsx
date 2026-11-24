@@ -69,6 +69,7 @@ export const ProjectMembers = ({ projectId, role: currentRole }) => {
         <button type="submit" className="btn-primary invite-btn" disabled={isInviting}>
           {isInviting ? 'Invitando…' : 'Invitar'}
         </button>
+        <small className="form-hint">La persona debe tener una cuenta en Ideator antes de ser invitada.</small>
       </form> : null}
 
       {error ? <p className="form-error" role="alert">{error}</p> : null}

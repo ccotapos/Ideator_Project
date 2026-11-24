@@ -203,7 +203,9 @@ router.post('/:id/invite', authenticateToken, verifyProjectRole(['owner']), asyn
     );
 
     if (targetUserResult.rows.length === 0) {
-      return res.status(404).json({ message: 'El usuario con ese correo no existe.' });
+      return res.status(404).json({
+        message: 'Ese correo todavía no tiene una cuenta en Ideator. Pídele a la persona que se registre y vuelve a invitarla.',
+      });
     }
 
     const targetUser = targetUserResult.rows[0];

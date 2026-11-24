@@ -226,7 +226,7 @@ describe('Projects Endpoints', () => {
         .send({ email: 'nonexistent@example.com' });
 
       expect(res.statusCode).toBe(404);
-      expect(res.body.message).toMatch(/no existe/i);
+      expect(res.body.message).toMatch(/se registre/i);
     });
 
     test('debe retornar 409 si el usuario ya es miembro del proyecto', async () => {
