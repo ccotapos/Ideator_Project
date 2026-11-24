@@ -22,7 +22,7 @@ async function getIdeatorReply(conversationHistory) {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     generationConfig: buildGenerationConfig({
       model,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 2048,
       temperature: 0.6,
     }),
   });
@@ -40,7 +40,11 @@ async function getIdeatorReply(conversationHistory) {
     },
   });
 
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = (data.candidates?.[0]?.content?.parts || [])
+    .filter((part) => !part.thought && typeof part.text === 'string')
+    .map((part) => part.text)
+    .join('')
+    .trim();
 
   return text || 'No se recibió una respuesta de texto.';
 }
