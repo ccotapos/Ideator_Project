@@ -37,6 +37,7 @@ async function startServer() {
     'http://localhost:5174',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
+    'http://host.docker.internal:5173',
   ].filter(Boolean);
 
   // Configuración de CORS dinámica

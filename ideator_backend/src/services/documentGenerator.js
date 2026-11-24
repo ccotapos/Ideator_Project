@@ -1,7 +1,7 @@
 const { generateContent, buildGenerationConfig } = require('../config/geminiClient');
 
-const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 
 const SPEC_SECTIONS = ['Problema', 'Usuarios', 'MVP', 'Reglas de negocio', 'Modelo de datos', 'Servicios'];
 const ARCH_SECTIONS = ['Tecnologías', 'Autenticación', 'Operación'];

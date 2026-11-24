@@ -19,6 +19,34 @@ const questions = {
     '¿Quiénes viven este problema directamente?',
     '¿Qué necesitan lograr esos usuarios?',
   ],
+  expected_outcomes: [
+    '¿Qué resultado concreto indicará que la solución funciona?',
+    '¿Cómo se medirá el éxito del producto?',
+  ],
+  functional_requirements: [
+    '¿Qué acciones indispensables debe permitir el producto?',
+    '¿Qué casos de uso debe cubrir el MVP?',
+  ],
+  technical_constraints: [
+    '¿Existen tecnologías, plazos o plataformas obligatorias?',
+    '¿Qué limitaciones técnicas deben respetarse?',
+  ],
+  business_rules: [
+    '¿Qué reglas determinan quién puede hacer cada acción?',
+    '¿Qué condiciones deben cumplirse para completar el proceso?',
+  ],
+  external_integrations: [
+    '¿Con qué servicios o sistemas externos debe comunicarse?',
+    '¿Qué ocurre si una integración no está disponible?',
+  ],
+  security_conditions: [
+    '¿Qué información debe protegerse y quién puede verla?',
+    '¿Qué mecanismos de autenticación y autorización se necesitan?',
+  ],
+  error_cases: [
+    '¿Qué debe ocurrir ante datos inválidos, recursos inexistentes o falta de permisos?',
+    '¿Qué errores debe comprender y poder resolver el usuario?',
+  ],
 };
 
 async function getMembership(userId, projectId, queryable = pool) {
@@ -88,12 +116,19 @@ router.put('/:id/definition/sections', authenticateToken, async (req, res) => {
     problem: req.body.problem,
     context: req.body.context,
     target_users: req.body.targetUsers,
+    expected_outcomes: req.body.expectedOutcomes,
+    functional_requirements: req.body.functionalRequirements,
+    technical_constraints: req.body.technicalConstraints,
+    business_rules: req.body.businessRules,
+    external_integrations: req.body.externalIntegrations,
+    security_conditions: req.body.securityConditions,
+    error_cases: req.body.errorCases,
   };
   const expectedRevision = req.body.expectedRevision;
 
   if (Object.values(answers).some((answer) => !answer || !answer.trim())) {
     return res.status(400).json({
-      message: 'Problema, contexto y usuarios objetivo son obligatorios.',
+      message: 'Completa todas las secciones de la definición antes de guardar.',
     });
   }
 

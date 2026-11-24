@@ -1,8 +1,8 @@
 const { generateContent, buildGenerationConfig } = require('../config/geminiClient');
 const { SCENARIOS, getScenario, listScenarios } = require('../config/architectureScenarios');
 
-const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 
 const TECH_KEYS = ['frontend', 'backend', 'database', 'communication', 'infrastructure'];
 

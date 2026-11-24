@@ -2,8 +2,8 @@ const { generateContent, buildGenerationConfig } = require('../config/geminiClie
 
 // La generación estructurada prioriza calidad: modelo completo con thinking
 // apagado y un modelo "lite" como respaldo si el principal se satura.
-const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 
 function validateGeneratedModel(model) {
   if (!model || !Array.isArray(model.entities) || model.entities.length < 2) {
@@ -34,7 +34,7 @@ async function generateDataModel(definition) {
     systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Usa nombres claros en snake_case, tipos PostgreSQL, llaves primarias y foráneas.' }] },
     generationConfig: buildGenerationConfig({
       model,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 8192,
       responseMimeType: 'application/json',
       responseSchema: {
         type: 'OBJECT',
@@ -58,9 +58,9 @@ async function generateDataModel(definition) {
   const data = await generateContent({
     model: MODEL,
     body: buildBody(MODEL),
-    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 30000, retries: 1 },
-    timeoutMs: 20000,
-    retries: 1,
+    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 60000, retries: 2 },
+    timeoutMs: 45000,
+    retries: 2,
   });
 
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;

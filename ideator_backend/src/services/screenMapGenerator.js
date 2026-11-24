@@ -1,7 +1,7 @@
 const { generateContent, buildGenerationConfig } = require('../config/geminiClient');
 
-const MODEL = process.env.GEMINI_STRUCTURED_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_STRUCTURED_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 const ROLES = ['owner', 'editor', 'viewer'];
 const CONTROL_TYPES = ['button', 'input', 'textarea', 'select', 'list', 'text', 'badge'];
 
@@ -67,7 +67,7 @@ async function generateScreenMap(context) {
     systemInstruction: { parts: [{ text: 'Devuelve solo JSON. Incluye pantallas, controles, acciones, navegación y visibilidad para owner, editor y viewer. Debe existir una entrada y un resultado final.' }] },
     generationConfig: buildGenerationConfig({
       model,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
       responseMimeType: 'application/json',
       responseSchema: { type: 'OBJECT', required: ['screens', 'transitions'], properties: {
         screens: { type: 'ARRAY', items: { type: 'OBJECT', required: ['key', 'name', 'entry', 'result', 'roles', 'controls'], properties: {
@@ -82,9 +82,9 @@ async function generateScreenMap(context) {
   const data = await generateContent({
     model: MODEL,
     body: buildBody(MODEL),
-    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 30000, retries: 1 },
-    timeoutMs: 20000,
-    retries: 1,
+    fallback: { model: FALLBACK_MODEL, body: buildBody(FALLBACK_MODEL), timeoutMs: 60000, retries: 2 },
+    timeoutMs: 45000,
+    retries: 2,
   });
 
   return validateGeneratedScreenMap(JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text));

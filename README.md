@@ -272,16 +272,17 @@ Todas las llamadas a Gemini pasan por `src/config/geminiClient.js`, que aplica
 
 - **Chat** (`getIdeatorReply`): usa `GEMINI_CHAT_MODEL` (por defecto
   `gemini-flash-lite-latest`), priorizando velocidad (~1–2 s).
-- **Modelo de datos y especificación de endpoints**: usan
+- **Generadores estructurados** (modelo de datos, endpoints, pantallas,
+  arquitectura y documentos): usan
   `GEMINI_STRUCTURED_MODEL` (por defecto `gemini-3.8-flash`) con el *thinking*
   desactivado; si el modelo se satura o no responde, se reintenta con
-  `GEMINI_STRUCTURED_FALLBACK_MODEL` (`gemini-flash-lite-latest`).
+  `GEMINI_STRUCTURED_FALLBACK_MODEL` (`gemini-3.5-flash-lite`).
 
 | Variable | Valor por defecto | Uso |
 | --- | --- | --- |
 | `GEMINI_CHAT_MODEL` | `gemini-flash-lite-latest` | Chat (velocidad) |
-| `GEMINI_STRUCTURED_MODEL` | `gemini-3.8-flash` | Modelo de datos y endpoints (calidad) |
-| `GEMINI_STRUCTURED_FALLBACK_MODEL` | `gemini-flash-lite-latest` | Respaldo si el principal falla |
+| `GEMINI_STRUCTURED_MODEL` | `gemini-3.8-flash` | Generación estructurada (calidad) |
+| `GEMINI_STRUCTURED_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | Respaldo si el principal falla |
 
 Los modelos *lite* no aceptan `thinkingConfig`, por lo que el cliente solo lo
 añade en modelos completos. El chat envía como contexto los últimos 10 mensajes.
@@ -360,5 +361,27 @@ Para verificar el proyecto:
 cd ideator_backend && npm test
 cd ../frontend && pnpm test && pnpm build
 ```
+
+La prueba funcional del navegador registra un usuario real, inicia sesión, crea
+un proyecto privado y comprueba sus secciones principales. Con la aplicación
+levantada mediante Docker se ejecuta con:
+
+```bash
+cd frontend
+pnpm test:e2e
+```
+
+## Definición completa y edición del diseño
+
+La migración `017_complete_project_definition.sql` amplía la definición guiada
+a diez áreas: problema, contexto, usuarios, resultados esperados, requisitos
+funcionales, restricciones técnicas, reglas de negocio, integraciones,
+seguridad y casos de error.
+
+El modelo de datos se puede corregir desde la interfaz: permite crear, editar y
+eliminar entidades, atributos y relaciones antes de aprobarlo. La pantalla de
+endpoints muestra, para cada operación, parámetros de ruta y consulta,
+cabeceras, cuerpo, validaciones y respuestas de éxito y error. La aprobación
+sigue bloqueada si la especificación no coincide con el modelo de datos.
 
 

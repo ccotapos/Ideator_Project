@@ -14,6 +14,13 @@ const SECTION_META = [
   { key: 'problem', field: 'problem', label: 'Problema' },
   { key: 'context', field: 'context', label: 'Contexto' },
   { key: 'target_users', field: 'targetUsers', label: 'Usuarios objetivo' },
+  { key: 'expected_outcomes', field: 'expectedOutcomes', label: 'Resultados esperados' },
+  { key: 'functional_requirements', field: 'functionalRequirements', label: 'Requisitos funcionales' },
+  { key: 'technical_constraints', field: 'technicalConstraints', label: 'Restricciones técnicas' },
+  { key: 'business_rules', field: 'businessRules', label: 'Reglas de negocio' },
+  { key: 'external_integrations', field: 'externalIntegrations', label: 'Integraciones externas' },
+  { key: 'security_conditions', field: 'securityConditions', label: 'Seguridad y permisos' },
+  { key: 'error_cases', field: 'errorCases', label: 'Casos de error' },
 ];
 
 function toForm(definition) {
@@ -25,6 +32,13 @@ function toForm(definition) {
     problem: sections.problem?.respuesta || '',
     context: sections.context?.respuesta || '',
     targetUsers: sections.target_users?.respuesta || '',
+    expectedOutcomes: sections.expected_outcomes?.respuesta || '',
+    functionalRequirements: sections.functional_requirements?.respuesta || '',
+    technicalConstraints: sections.technical_constraints?.respuesta || '',
+    businessRules: sections.business_rules?.respuesta || '',
+    externalIntegrations: sections.external_integrations?.respuesta || '',
+    securityConditions: sections.security_conditions?.respuesta || '',
+    errorCases: sections.error_cases?.respuesta || '',
     inScope: list(mvp.inScope),
     outOfScope: list(mvp.outOfScope),
     journey: list(mvp.journey),
@@ -166,9 +180,9 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
     setSuccess('');
 
     const errors = {};
-    if (!form.problem.trim()) errors.problem = 'El problema es obligatorio.';
-    if (!form.context.trim()) errors.context = 'El contexto es obligatorio.';
-    if (!form.targetUsers.trim()) errors.targetUsers = 'Los usuarios objetivo son obligatorios.';
+    SECTION_META.forEach(({ field, label }) => {
+      if (!form[field].trim()) errors[field] = `${label} es obligatorio.`;
+    });
 
     const inScope = form.inScope.map((item) => item.trim()).filter(Boolean);
     const outOfScope = form.outOfScope.map((item) => item.trim()).filter(Boolean);
@@ -190,6 +204,13 @@ export default function ReviewDefinitionPage({ projectId: projectIdProp, role: r
           problem: form.problem.trim(),
           context: form.context.trim(),
           targetUsers: form.targetUsers.trim(),
+          expectedOutcomes: form.expectedOutcomes.trim(),
+          functionalRequirements: form.functionalRequirements.trim(),
+          technicalConstraints: form.technicalConstraints.trim(),
+          businessRules: form.businessRules.trim(),
+          externalIntegrations: form.externalIntegrations.trim(),
+          securityConditions: form.securityConditions.trim(),
+          errorCases: form.errorCases.trim(),
           expectedRevision: definition?.revision || 0,
         },
         token

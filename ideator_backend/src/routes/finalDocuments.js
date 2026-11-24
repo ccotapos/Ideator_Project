@@ -85,7 +85,9 @@ async function loadContext(queryable, projectId) {
   if (specRow.rows[0]) {
     const row = specRow.rows[0];
     const result = await queryable.query(
-      'SELECT metodo, ruta, operacion, entidad, atributos FROM endpoints WHERE especificacion_id = $1 ORDER BY posicion, id;',
+      `SELECT metodo, ruta, operacion, entidad, atributos, parametros_ruta,
+              parametros_consulta, cabeceras, cuerpo, validaciones, respuestas
+       FROM endpoints WHERE especificacion_id = $1 ORDER BY posicion, id;`,
       [row.id]
     );
     endpointSpec = { id: row.id, estado: row.estado, modeloId: row.modelo_id, updatedAt: row.updated_at, endpoints: result.rows };

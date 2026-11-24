@@ -143,9 +143,26 @@ router.post('/:id/endpoint-spec/generate', authenticateToken, async (req, res) =
 
     for (const [position, endpoint] of generated.endpoints.entries()) {
       await client.query(
-        `INSERT INTO endpoints (especificacion_id, metodo, ruta, operacion, entidad, atributos, posicion)
-         VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7);`,
-        [specId, endpoint.method, endpoint.route, endpoint.operation, endpoint.entity || null, JSON.stringify(endpoint.attributes || []), position]
+        `INSERT INTO endpoints
+           (especificacion_id, metodo, ruta, operacion, entidad, atributos,
+            parametros_ruta, parametros_consulta, cabeceras, cuerpo, validaciones, respuestas, posicion)
+         VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb,
+                 $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb, $13);`,
+        [
+          specId,
+          endpoint.method,
+          endpoint.route,
+          endpoint.operation,
+          endpoint.entity || null,
+          JSON.stringify(endpoint.attributes || []),
+          JSON.stringify(endpoint.pathParameters || []),
+          JSON.stringify(endpoint.queryParameters || []),
+          JSON.stringify(endpoint.headers || []),
+          endpoint.requestBody ? JSON.stringify(endpoint.requestBody) : null,
+          JSON.stringify(endpoint.validations || []),
+          JSON.stringify(endpoint.responses || []),
+          position,
+        ]
       );
     }
 

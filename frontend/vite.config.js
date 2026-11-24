@@ -9,8 +9,12 @@ const backendTarget = process.env.VITE_PROXY_TARGET || 'http://localhost:3000';
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+  },
   server: {
     host: true, // necesario para que el servidor sea accesible desde fuera del contenedor
+    allowedHosts: ['localhost', '127.0.0.1', 'host.docker.internal'],
     port: 5173,
     proxy: {
       '/api': {

@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { addAttribute, addEntity, approveDataModel, deleteAttribute, deleteEntity, generateDataModel, getDataModel, updateEntity } from '../api/dataModel.js';
+import {
+  addAttribute,
+  addEntity,
+  addRelationship,
+  approveDataModel,
+  deleteAttribute,
+  deleteEntity,
+  deleteRelationship,
+  generateDataModel,
+  getDataModel,
+  updateAttribute,
+  updateEntity,
+  updateRelationship,
+} from '../api/dataModel.js';
 
 export default function DataModelPage({ projectId, role }) {
   const { token } = useAuth();
@@ -43,6 +56,46 @@ export default function DataModelPage({ projectId, role }) {
     if (type) run(() => addAttribute(projectId, entity.id, { name, type }, token), 'Atributo agregado.');
   };
 
+  const editAttribute = (attribute) => {
+    const name = window.prompt('Nombre del atributo', attribute.nombre);
+    if (!name) return;
+    const type = window.prompt('Tipo PostgreSQL', attribute.tipo_dato);
+    if (!type) return;
+    const nullable = window.confirm('¿El atributo puede quedar vacío?');
+    run(() => updateAttribute(projectId, attribute.id, {
+      name,
+      type,
+      nullable,
+      primaryKey: attribute.es_pk,
+    }, token), 'Atributo actualizado.');
+  };
+
+  const createRelationship = () => {
+    if (model.entities.length < 2) {
+      setMessage('Se necesitan al menos dos entidades para crear una relación.');
+      return;
+    }
+    const options = model.entities.map((entity) => `${entity.id}: ${entity.nombre}`).join('\n');
+    const fromEntityId = Number(window.prompt(`Entidad de origen (escribe el ID):\n${options}`));
+    const toEntityId = Number(window.prompt(`Entidad de destino (escribe el ID):\n${options}`));
+    if (!fromEntityId || !toEntityId) return;
+    const name = window.prompt('Nombre de la relación', 'pertenece_a');
+    const fromCardinality = window.prompt('Cardinalidad de origen', '1');
+    const toCardinality = window.prompt('Cardinalidad de destino', 'N');
+    if (name && fromCardinality && toCardinality) {
+      run(() => addRelationship(projectId, { fromEntityId, toEntityId, name, fromCardinality, toCardinality }, token), 'Relación agregada.');
+    }
+  };
+
+  const editRelationship = (relationship) => {
+    const name = window.prompt('Nombre de la relación', relationship.nombre);
+    const fromCardinality = window.prompt('Cardinalidad de origen', relationship.cardinalidad_origen);
+    const toCardinality = window.prompt('Cardinalidad de destino', relationship.cardinalidad_destino);
+    if (name && fromCardinality && toCardinality) {
+      run(() => updateRelationship(projectId, relationship.id, { name, fromCardinality, toCardinality }, token), 'Relación actualizada.');
+    }
+  };
+
   if (loading) return <p>Cargando modelo de datos...</p>;
 
   return (
@@ -55,6 +108,7 @@ export default function DataModelPage({ projectId, role }) {
         <div className="data-model-actions">
           {editable || !model ? <button className="btn-primary" disabled={working} onClick={() => run(() => generateDataModel(projectId, token), 'Modelo generado con IA.')}>{model ? 'Regenerar con IA' : 'Generar con IA'}</button> : null}
           {editable ? <button className="btn-secondary" disabled={working} onClick={createEntity}>+ Entidad</button> : null}
+          {editable ? <button className="btn-secondary" disabled={working} onClick={createRelationship}>+ Relación</button> : null}
           {role === 'owner' && model?.estado === 'draft' ? <button className="btn-approve" disabled={working} onClick={() => run(() => approveDataModel(projectId, token), 'Modelo aprobado y bloqueado.')}>Aprobar modelo</button> : null}
         </div>
       </div>
@@ -68,14 +122,14 @@ export default function DataModelPage({ projectId, role }) {
             {model.entities.map((entity) => (
               <article className="er-entity" key={entity.id}>
                 <header><strong>{entity.nombre}</strong>{editable ? <button title="Renombrar entidad" onClick={() => renameEntity(entity)}>✎</button> : null}</header>
-                <ul>{entity.attributes.map((attribute) => <li key={attribute.id}><span>{attribute.es_pk ? 'PK' : '  '} {attribute.nombre}</span><span>{attribute.tipo_dato}{editable ? <button title="Eliminar atributo" onClick={() => run(() => deleteAttribute(projectId, attribute.id, token), 'Atributo eliminado.')}>×</button> : null}</span></li>)}</ul>
+                <ul>{entity.attributes.map((attribute) => <li key={attribute.id}><span>{attribute.es_pk ? 'PK' : '  '} {attribute.nombre}{attribute.nullable ? ' · opcional' : ' · obligatorio'}</span><span>{attribute.tipo_dato}{editable ? <><button title="Editar atributo" onClick={() => editAttribute(attribute)}>Editar</button><button title="Eliminar atributo" onClick={() => run(() => deleteAttribute(projectId, attribute.id, token), 'Atributo eliminado.')}>×</button></> : null}</span></li>)}</ul>
                 {editable ? <footer><button onClick={() => createAttribute(entity)}>+ Atributo</button><button className="danger-link" onClick={() => window.confirm(`¿Eliminar ${entity.nombre}?`) && run(() => deleteEntity(projectId, entity.id, token), 'Entidad eliminada.')}>Eliminar</button></footer> : null}
               </article>
             ))}
           </div>
           <section className="relationship-list">
             <h4>Relaciones y cardinalidades</h4>
-            {model.relationships.length ? model.relationships.map((relation) => <p key={relation.id}><strong>{relation.entidad_origen}</strong> ({relation.cardinalidad_origen}) → <strong>{relation.entidad_destino}</strong> ({relation.cardinalidad_destino})</p>) : <p>Sin relaciones registradas.</p>}
+            {model.relationships.length ? model.relationships.map((relation) => <div className="relationship-item" key={relation.id}><p><strong>{relation.entidad_origen}</strong> ({relation.cardinalidad_origen}) → <strong>{relation.entidad_destino}</strong> ({relation.cardinalidad_destino}) · {relation.nombre}</p>{editable ? <div><button type="button" onClick={() => editRelationship(relation)}>Editar</button><button type="button" className="danger-link" onClick={() => window.confirm('¿Eliminar esta relación?') && run(() => deleteRelationship(projectId, relation.id, token), 'Relación eliminada.')}>Eliminar</button></div> : null}</div>) : <p>Sin relaciones registradas.</p>}
           </section>
         </>
       ) : null}

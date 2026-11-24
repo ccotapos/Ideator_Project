@@ -38,6 +38,13 @@ describe('Definición guiada del proyecto', () => {
       'problem',
       'context',
       'target_users',
+      'expected_outcomes',
+      'functional_requirements',
+      'technical_constraints',
+      'business_rules',
+      'external_integrations',
+      'security_conditions',
+      'error_cases',
     ]);
 
     client.query.mockImplementation(async (query) => {
@@ -57,11 +64,18 @@ describe('Definición guiada del proyecto', () => {
         problem: 'Los equipos pierden acuerdos importantes.',
         context: 'Trabajo remoto con varias herramientas.',
         targetUsers: 'Equipos pequeños de producto.',
+        expectedOutcomes: 'Reducir el tiempo de coordinación.',
+        functionalRequirements: 'Crear y revisar proyectos.',
+        technicalConstraints: 'Aplicación web con PostgreSQL.',
+        businessRules: 'Solo integrantes autorizados pueden editar.',
+        externalIntegrations: 'Proveedor de identidad externo.',
+        securityConditions: 'Autenticación y permisos por proyecto.',
+        errorCases: 'Informar datos inválidos y falta de permisos.',
         expectedRevision: 0,
       });
 
     expect(saveResponse.statusCode).toBe(200);
-    expect(saveResponse.body.sections).toHaveLength(3);
+    expect(saveResponse.body.sections).toHaveLength(10);
     expect(client.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO definicion_secciones'),
       ['10', 'target_users', 'Equipos pequeños de producto.', 7]
@@ -112,7 +126,7 @@ describe('Definición guiada del proyecto', () => {
     const response = await request(app)
       .put('/api/projects/10/definition/sections')
       .set('Authorization', `Bearer ${token}`)
-      .send({ problem: 'Problema', context: 'Contexto', targetUsers: 'Usuarios', expectedRevision: 4 });
+      .send({ problem: 'Problema', context: 'Contexto', targetUsers: 'Usuarios', expectedOutcomes: 'Resultado', functionalRequirements: 'Requisitos', technicalConstraints: 'Restricciones', businessRules: 'Reglas', externalIntegrations: 'Integraciones', securityConditions: 'Seguridad', errorCases: 'Errores', expectedRevision: 4 });
 
     expect(response.statusCode).toBe(409);
     expect(response.body.currentRevision).toBe(5);

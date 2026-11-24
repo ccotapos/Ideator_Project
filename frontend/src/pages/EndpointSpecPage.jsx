@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { approveEndpointSpec, generateEndpointSpec, getEndpointSpec, validateEndpointSpec } from '../api/endpointSpec.js';
 
@@ -9,6 +9,7 @@ export default function EndpointSpecPage({ projectId, role }) {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
+  const [expandedEndpoint, setExpandedEndpoint] = useState(null);
 
   const canEdit = ['owner', 'editor'].includes(role);
   const isDraft = !spec || spec.estado === 'draft';
@@ -125,6 +126,7 @@ export default function EndpointSpecPage({ projectId, role }) {
       ) : null}
 
       {spec ? (
+        <div className="endpoint-spec-list">
         <table className="endpoint-table">
           <thead>
             <tr>
@@ -133,10 +135,12 @@ export default function EndpointSpecPage({ projectId, role }) {
               <th>Operación</th>
               <th>Entidad</th>
               <th>Atributos</th>
+              <th>Detalle</th>
             </tr>
           </thead>
           <tbody>
             {spec.endpoints.map((endpoint) => (
+              <Fragment key={endpoint.id}>
               <tr key={endpoint.id}>
                 <td>
                   <span className={`endpoint-method endpoint-method-${endpoint.metodo.toLowerCase()}`}>
@@ -147,11 +151,44 @@ export default function EndpointSpecPage({ projectId, role }) {
                 <td>{endpoint.operacion}</td>
                 <td>{endpoint.entidad || '—'}</td>
                 <td>{(endpoint.atributos || []).join(', ') || '—'}</td>
+                <td><button type="button" className="btn-secondary" onClick={() => setExpandedEndpoint(expandedEndpoint === endpoint.id ? null : endpoint.id)}>{expandedEndpoint === endpoint.id ? 'Ocultar' : 'Ver detalle'}</button></td>
               </tr>
+              {expandedEndpoint === endpoint.id ? (
+                <tr className="endpoint-detail-row">
+                  <td colSpan="6">
+                    <div className="endpoint-detail-grid">
+                      <EndpointItems title="Parámetros de ruta" items={endpoint.parametros_ruta} />
+                      <EndpointItems title="Parámetros de consulta" items={endpoint.parametros_consulta} />
+                      <EndpointItems title="Cabeceras" items={endpoint.cabeceras} />
+                      <EndpointBody body={endpoint.cuerpo} />
+                      <EndpointTextList title="Validaciones" items={endpoint.validaciones} />
+                      <EndpointResponses items={endpoint.respuestas} />
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
+              </Fragment>
             ))}
           </tbody>
         </table>
+        </div>
       ) : null}
     </div>
   );
+}
+
+function EndpointItems({ title, items = [] }) {
+  return <section><h4>{title}</h4>{items.length ? <ul>{items.map((item, index) => <li key={`${item.name}-${index}`}><code>{item.name}</code> · {item.type}{item.required ? ' · obligatorio' : ' · opcional'}<span>{item.description}</span></li>)}</ul> : <p>No aplica.</p>}</section>;
+}
+
+function EndpointBody({ body }) {
+  return <section><h4>Cuerpo de la solicitud</h4>{body ? <><p>{body.description || (body.required ? 'Obligatorio' : 'Opcional')}</p><ul>{(body.fields || []).map((field, index) => <li key={`${field.name}-${index}`}><code>{field.name}</code> · {field.type}{field.required ? ' · obligatorio' : ' · opcional'}<span>{field.description}</span></li>)}</ul></> : <p>No aplica.</p>}</section>;
+}
+
+function EndpointTextList({ title, items = [] }) {
+  return <section><h4>{title}</h4>{items.length ? <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul> : <p>Sin validaciones adicionales.</p>}</section>;
+}
+
+function EndpointResponses({ items = [] }) {
+  return <section><h4>Respuestas</h4>{items.length ? <ul>{items.map((item, index) => <li key={`${item.status}-${index}`}><strong>{item.status}</strong> · {item.description}{item.schema ? <pre>{JSON.stringify(item.schema, null, 2)}</pre> : null}</li>)}</ul> : <p>Sin respuestas documentadas.</p>}</section>;
 }

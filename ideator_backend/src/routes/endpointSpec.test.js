@@ -6,8 +6,8 @@ jest.mock('../config/db', () => ({ query: jest.fn(), connect: jest.fn() }));
 jest.mock('../services/endpointSpecGenerator', () => ({
   generateEndpointSpec: jest.fn().mockResolvedValue({
     endpoints: [
-      { method: 'GET', route: '/api/proyectos', operation: 'Listar proyectos', entity: 'proyectos', attributes: ['id', 'nombre'] },
-      { method: 'POST', route: '/api/proyectos', operation: 'Crear proyecto', entity: 'proyectos', attributes: ['nombre'] },
+      { method: 'GET', route: '/api/proyectos', operation: 'Listar proyectos', entity: 'proyectos', attributes: ['id', 'nombre'], pathParameters: [], queryParameters: [], headers: [{ name: 'Authorization', type: 'string', required: true }], requestBody: null, validations: [], responses: [{ status: 200, description: 'Lista obtenida' }, { status: 401, description: 'Sin autenticación' }] },
+      { method: 'POST', route: '/api/proyectos', operation: 'Crear proyecto', entity: 'proyectos', attributes: ['nombre'], pathParameters: [], queryParameters: [], headers: [{ name: 'Authorization', type: 'string', required: true }], requestBody: { required: true, fields: [{ name: 'nombre', type: 'string', required: true }] }, validations: ['nombre obligatorio'], responses: [{ status: 201, description: 'Proyecto creado' }, { status: 400, description: 'Datos inválidos' }] },
     ],
   }),
 }));
@@ -78,11 +78,11 @@ describe('Especificación de endpoints con IA', () => {
     );
     expect(client.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO endpoints'),
-      [40, 'GET', '/api/proyectos', 'Listar proyectos', 'proyectos', JSON.stringify(['id', 'nombre']), 0]
+      [40, 'GET', '/api/proyectos', 'Listar proyectos', 'proyectos', JSON.stringify(['id', 'nombre']), '[]', '[]', JSON.stringify([{ name: 'Authorization', type: 'string', required: true }]), null, '[]', JSON.stringify([{ status: 200, description: 'Lista obtenida' }, { status: 401, description: 'Sin autenticación' }]), 0]
     );
     expect(client.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO endpoints'),
-      [40, 'POST', '/api/proyectos', 'Crear proyecto', 'proyectos', JSON.stringify(['nombre']), 1]
+      [40, 'POST', '/api/proyectos', 'Crear proyecto', 'proyectos', JSON.stringify(['nombre']), '[]', '[]', JSON.stringify([{ name: 'Authorization', type: 'string', required: true }]), JSON.stringify({ required: true, fields: [{ name: 'nombre', type: 'string', required: true }] }), JSON.stringify(['nombre obligatorio']), JSON.stringify([{ status: 201, description: 'Proyecto creado' }, { status: 400, description: 'Datos inválidos' }]), 1]
     );
     expect(client.query).toHaveBeenCalledWith('COMMIT');
     expect(client.release).toHaveBeenCalled();
