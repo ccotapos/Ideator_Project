@@ -1,7 +1,8 @@
 const { generateContent, buildGenerationConfig } = require('./geminiClient');
 
 // El chat prioriza velocidad: modelo "lite" (no admite thinkingConfig).
-const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-flash-lite-latest';
+const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = process.env.GEMINI_STRUCTURED_FALLBACK_MODEL || 'gemini-3.5-flash-lite';
 
 const SYSTEM_PROMPT = `Eres "Ideator", un asistente que ayuda a un equipo de producto a definir un proyecto de software.
 Guías la conversación para que el equipo alinee el problema, las personas involucradas, el alcance y las decisiones
@@ -16,18 +17,26 @@ async function getIdeatorReply(conversationHistory) {
     parts: [{ text: message.content }],
   }));
 
+  const buildBody = (model) => ({
+    contents,
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    generationConfig: buildGenerationConfig({
+      model,
+      maxOutputTokens: 1024,
+      temperature: 0.6,
+    }),
+  });
+
   const data = await generateContent({
     model: CHAT_MODEL,
-    timeoutMs: 20000,
-    retries: 2,
-    body: {
-      contents,
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      generationConfig: buildGenerationConfig({
-        model: CHAT_MODEL,
-        maxOutputTokens: 1024,
-        temperature: 0.6,
-      }),
+    timeoutMs: 10000,
+    retries: 0,
+    body: buildBody(CHAT_MODEL),
+    fallback: {
+      model: FALLBACK_MODEL,
+      body: buildBody(FALLBACK_MODEL),
+      timeoutMs: 10000,
+      retries: 0,
     },
   });
 
